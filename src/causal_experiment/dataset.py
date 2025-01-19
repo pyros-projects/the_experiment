@@ -65,23 +65,30 @@ def generate_example(to_omit_list=None):
     """
     # Random initial states for A,B,C,D,E
  
-    A_init = random.randint(0, 1)
-    B_init = random.randint(0, 1)
-    C_init = random.randint(0, 1)
-    D_init = random.randint(0, 1)
-    E_init = random.randint(0, 1)
+    max_attempts = 100  # Prevent infinite loops
     
-    A_str = str(A_init)
-    B_str = str(B_init)
-    C_str = str(C_init)
-    D_str = str(D_init)
-    E_str = str(E_init)
-    
-    text_before = (f"{A_str},{B_str},{C_str},{D_str},{E_str}")
-    
-    # If we want to omit certain scenarios, we can do that here  
-    if (to_omit_list is not None) and (text_before in to_omit_list):
-        return
+    for _ in range(max_attempts):
+        # Random initial states for A,B,C,D,E
+        A_init = random.randint(0, 1)
+        B_init = random.randint(0, 1)
+        C_init = random.randint(0, 1)
+        D_init = random.randint(0, 1)
+        E_init = random.randint(0, 1)
+        
+        A_str = str(A_init)
+        B_str = str(B_init)
+        C_str = str(C_init)
+        D_str = str(D_init)
+        E_str = str(E_init)
+        
+        text_before = (f"{A_str},{B_str},{C_str},{D_str},{E_str}")
+        
+        # If sequence is not in omit list (or there is no omit list), use it
+        if to_omit_list is None or text_before not in to_omit_list:
+            break
+    else:
+        print(f"Warning: Could not generate sequence not in omit_list after {max_attempts} attempts")
+        return None
 
     # Convert to bool for easier logic
     A_b = int2bool(A_init)

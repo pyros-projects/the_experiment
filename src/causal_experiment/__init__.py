@@ -30,7 +30,7 @@ def main() -> None:
         
     elif args.generate:
         if args.omit:
-            to_omit_list = args.o.split(";")
+            to_omit_list = parse_sequences(args.omit)
             print(f"Generating without input sequences: {to_omit_list}")
             call_generate_dataset(to_omit_list)
         else:
@@ -38,7 +38,11 @@ def main() -> None:
             call_generate_dataset()
 
 
-        
+def parse_sequences(seq_str):
+    """Parse multiple sequences separated by semicolon"""
+    if not seq_str:
+        return None
+    return seq_str.split(";")
  
 
 def call_generate_dataset(to_omit_list=None) -> None:
