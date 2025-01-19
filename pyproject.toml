@@ -15,23 +15,23 @@ dependencies = [
     "numpy>=2.2.1",
     "pandas>=2.2.3",
     "plotly>=5.24.1",
+    "python-fasthtml>=0.12.0",
     "scikit-learn>=1.6.1",
     "seaborn>=0.13.2",
-    "streamlit>=1.41.1",
     "torch>=2.5.1",
     "torchvision>=0.20.1",
     "transformers[torch]>=4.48.0",
 ]
 
-[tool.uv.sources]
-torch = { index = "pytorch" }
-torchvision = { index = "pytorch" }
+# [tool.uv.sources]
+# torch = { index = "pytorch" }
+# torchvision = { index = "pytorch" }
 
 
-[[tool.uv.index]]
-name = "pytorch"
-url = "https://download.pytorch.org/whl/cu124"
-explicit = true
+# [[tool.uv.index]]
+# name = "pytorch"
+# url = "https://download.pytorch.org/whl/cu124"
+# explicit = true
 
 [project.scripts]
 causal-experiment = "causal_experiment:main"

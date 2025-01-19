@@ -23,30 +23,25 @@ def manual_test(prompt):
     E_b = int2bool(e)
    
     # Apply structural equations:
-    # B = A XOR C
-    new_B = A_b ^ C_b
-    # C = NOT D
-    new_C = not D_b
-    # D = B AND E
-    new_D = B_b and E_b
-    # E = A OR C
-    new_E = A_b or new_C
+    # new_A = A XOR C
+    new_A = A_b ^ C_b
+    # new_B = NOT D
+    new_B = not D_b
+    # new_C = B AND E
+    new_C = B_b and E_b
+    # new_D = A OR new_B
+    new_D = A_b or new_B
 
-    A_str = str(a)
-    B_str = str(b)
-    C_str = str(c)
-    D_str = str(d)
-    E_str = str(e)
-
+    new_A_str = str(bool2int(new_A))
     new_B_str = str(bool2int(new_B))
     new_C_str = str(bool2int(new_C))
     new_D_str = str(bool2int(new_D))
-    new_E_str = str(bool2int(new_E))
+    
     old_sum = a + b + c + d + e
-    new_sum = new_B + new_C + new_D + new_E 
+    new_sum = new_B + new_C + new_D + new_A
 
-    text_before = (f"{A_str},{B_str},{C_str},{D_str},{E_str}")
-    text_after = (f"\n{new_B_str},{new_C_str},{new_D_str},{new_E_str}\n{old_sum} - {new_sum}\n")
+    text_before = (f"{a},{b},{c},{d},{e}")
+    text_after = (f"\{new_A_str},{new_B_str},{new_C_str},{new_D_str}\n{old_sum} - {new_sum}\n")
 
     return {
         "prompt": text_before,
@@ -91,25 +86,26 @@ def generate_example(to_omit_list=None):
     E_b = int2bool(E_init)
 
     # Apply structural equations:
-    # B = A XOR C
-    new_B = A_b ^ C_b
-    # C = NOT D
-    new_C = not D_b
-    # D = B AND E
-    new_D = B_b and E_b
-    # E = A OR C
-    new_E = A_b or new_C
+    # new_A = A XOR C
+    new_A = A_b ^ C_b
+    # new_B = NOT D
+    new_B = not D_b
+    # new_C = B AND E
+    new_C = B_b and E_b
+    # new_D = A OR new_B
+    new_D = A_b or new_B
 
     
     old_sum = A_init + B_init + C_init + D_init + E_init
+    new_sum = new_A + new_B + new_C + new_D
 
+    new_A_str = str(bool2int(new_A))
     new_B_str = str(bool2int(new_B))
     new_C_str = str(bool2int(new_C))
     new_D_str = str(bool2int(new_D))
-    new_E_str = str(bool2int(new_E))
-    new_sum = new_B + new_C + new_D + new_E 
+    
 
-    text_after = (f"\n{new_B_str},{new_C_str},{new_D_str},{new_E_str}\n{old_sum} - {new_sum}\n")
+    text_after = (f"\{new_A_str},{new_B_str},{new_C_str},{new_D_str}\n{old_sum} - {new_sum}\n")
     
     return {
         "prompt": text_before,
