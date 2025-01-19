@@ -25,7 +25,7 @@ sum(A+B+C+D+E) - sum2(newA+newB+newC+newD)
 
 The model learns to predict how the states of newA, newB, newC and newD update given an initial state configuration.
 
-Note, that for newD and sum2 the system can't infer it directly from the input without 'knowing' the rules, since
+Note, that for newD and sum2 the system can't infer it directly from the input without 'knowing' the rules, since sequential dependency (newD depending on newB) is not trivial, especially if it's sequential dependency in the output itself
 
 example
 
