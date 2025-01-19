@@ -32,7 +32,6 @@ def manual_test(prompt):
     # E = A OR C
     new_E = A_b or new_C
 
-    # Convert back to int
     A_str = str(a)
     B_str = str(b)
     C_str = str(c)
@@ -45,14 +44,10 @@ def manual_test(prompt):
     new_E_str = str(bool2int(new_E))
     old_sum = a + b + c + d + e
     new_sum = new_B + new_C + new_D + new_E 
-     # Build textual scenario
-    # Format it as a short piece of text that the model can do next-token prediction on.
+
     text_before = (f"{A_str},{B_str},{C_str},{D_str},{E_str}")
-    # We'll ask the model to output: "B -> 0, C -> 1, D -> 0, E -> 1" etc.
     text_after = (f"\n{new_B_str},{new_C_str},{new_D_str},{new_E_str}\n{old_sum} - {new_sum}\n")
-    # We'll return a single text example that we can treat as one training instance
-    # Possibly we want the model to predict the text_after line given text_before
-    # We'll store them together in a single JSON line.
+
     return {
         "prompt": text_before,
         "completion": text_after
@@ -63,10 +58,8 @@ def generate_example(to_omit_list=None):
     Generates a single example (scenario) with random initial states for A, B, C, D, E,
     then applies the structural equations, and returns a textual representation.
     """
-    # Random initial states for A,B,C,D,E
  
     max_attempts = 100  # Prevent infinite loops
-    
     for _ in range(max_attempts):
         # Random initial states for A,B,C,D,E
         A_init = random.randint(0, 1)
@@ -107,7 +100,6 @@ def generate_example(to_omit_list=None):
     # E = A OR C
     new_E = A_b or new_C
 
-    # Convert back to int
     
     old_sum = A_init + B_init + C_init + D_init + E_init
 
@@ -117,15 +109,8 @@ def generate_example(to_omit_list=None):
     new_E_str = str(bool2int(new_E))
     new_sum = new_B + new_C + new_D + new_E 
 
-    # Build textual scenario
-    # Format it as a short piece of text that the model can do next-token prediction on.
-    
-    # We'll ask the model to output: "B -> 0, C -> 1, D -> 0, E -> 1" etc.
     text_after = (f"\n{new_B_str},{new_C_str},{new_D_str},{new_E_str}\n{old_sum} - {new_sum}\n")
-
-    # We'll return a single text example that we can treat as one training instance
-    # Possibly we want the model to predict the text_after line given text_before
-    # We'll store them together in a single JSON line.
+    
     return {
         "prompt": text_before,
         "completion": text_after

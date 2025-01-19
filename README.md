@@ -58,7 +58,21 @@ Output: "0,1,0,1\\n3 - 3"
 
 ## How do I use this?
 
-### Installation
+### Installation like a software engineer
+
+https://docs.astral.sh/uv
+
+```bash
+git clone thishit
+cd causal-experiment
+
+uv sync
+uv build && uv pip install -e .
+
+causal-experiment --generate -o '1,1,1,1,1;0,0,0,0,0'
+```
+
+### Installation like a computer scientist 
 
 ```bash
 # Clone the repository
@@ -66,18 +80,16 @@ git clone thishit
 cd causal-experiment
 
 # Install dependencies
-uv sync
+pip install -r requirements.txt
+python -m venv .venv
 
 #activate venv
 source .venv/bin/activate # Mac+Linux
 .venv\Scripts\activate  # Win
 
-#build and install
-uv build && uv pip install -e .
-
-#run
-causal-experiment --generate -o '1,1,1,1,1;0,0,0,0,0'
+python ./src/causal_experiment/__init__.py --generate -o '1,0,1,0,1'
 ```
+
 
 ### Generate dataset
 
@@ -157,6 +169,14 @@ The experiment uses loguru for comprehensive logging:
 - Log files stored in `logs/` directory
 - Rotation: 100MB file size
 - Retention: 10 days
+
+## Creating your own rules
+
+Inside `dataset.py` change up `generate_example()` however you want.
+
+
+Don't forget to implement the same rules in `manual_test()` which is the code used for evaluating your input by code when using `--test`
+
 
 ## Troubles
 
