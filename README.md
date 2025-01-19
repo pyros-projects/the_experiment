@@ -1,10 +1,18 @@
 # Causal Reasoning Experiment
 
-This project implements a causal reasoning experiment using a small GPT-2 model to learn structural equations and predict state changes in a system of boolean variables.
+This project implements a causal reasoning experiment using a small GPT-2 model to learn structural equations and predict state changes in a system/'world' of boolean variables.
+
+Hopefully it shows that an LLM indeed builds up a causal world model that goes beyond pattern matching.
+
+o1 pro says about the experiment and its results:
+
+```
+This challenges some common assumptions about LLMs.
+```
 
 ## Overview
 
-The experiment models a system of 5 boolean variables (A, B, C, D, E) with the following structural equations:
+The experiment models a system of 5 boolean variables (A, B, C, D, E) with the following structural equations and rules:
 
 ```
 newA = A XOR C
@@ -17,7 +25,7 @@ sum(A+B+C+D+E) - sum2(newA+newB+newC+newD)
 
 The model learns to predict how the states of newA, newB, newC and newD update given an initial state configuration.
 
-Note, that for newD and sum2 the system can't infer it directly from the input without 'knowing' the rules.
+Note, that for newD and sum2 the system can't infer it directly from the input without 'knowing' the rules, since
 
 example
 
@@ -70,7 +78,7 @@ source .venv/bin/activate # Mac+Linux
 uv build && uv pip install -e .
 
 #run
-causal-experiment --generate -o '1,1,1,1,1';'0,0,0,0,0'
+causal-experiment --generate -o '1,1,1,1,1;0,0,0,0,0'
 ```
 
 ### Generate dataset
