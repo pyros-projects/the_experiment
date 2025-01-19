@@ -1,6 +1,6 @@
 # Causal Reasoning Experiment
 
-This project implements a causal reasoning experiment using a small GPT-2 model to learn structural equations and predict state changes in a system/'world' of boolean variables.
+This project implements a causal reasoning experiment using a small GPT-2 model to learn structural equations and predict state changes in a system/'world' of boolean variables and basic arithmetic.
 
 Hopefully it shows that an LLM indeed builds up a causal world model that goes beyond pattern matching.
 
