@@ -24,7 +24,13 @@ def DatasetView(rt):
         valid_set = generate_dataset(2000, "dataset/valid.jsonl",None)
         test_set = generate_dataset(2000, "dataset/test.jsonl",None)
         create_visualizations(train_set)
-        return DatasetTable(train_set)
+        
+        
+        return Div(cls="uk-child-width-expand@s uk-text-center uk-grid")(
+                    Div(cls="uk-card uk-card-body uk-card-default")(Img(src="visualizations/final_state_heatmap.png",cls="w-1/2")),
+                    Div(cls="uk-card uk-card-body uk-card-default")(Img(src="visualizations/top_final_sequences.png")),
+                    Div(cls="uk-card uk-card-body uk-card-default")(Img(src="visualizations/sum_transitions_heatmap.png")),
+                ) #DatasetTable(train_set)
     
 
     
