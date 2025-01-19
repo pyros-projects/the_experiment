@@ -93,8 +93,11 @@ python ./src/causal_experiment/__init__.py --generate -o '1,0,1,0,1'
 ### Generate dataset
 
 ```bash
-causal-experiment --generate  # Generate complete dataset
-causal-experiment --generate -o '1,1,1,1,1;0,0,0,0,0'  # Generate dataset excluding specific sequences
+ # Generate complete dataset
+causal-experiment --generate
+# Generate dataset excluding specific sequences
+# seperated by ;
+causal-experiment --generate -o '1,1,1,1,1;0,0,0,0,0'  
 ```
 
 This will create:
@@ -204,4 +207,4 @@ I will literally check nothing else. no mail, no github issues, no reddit messag
 
 ## License
 
-MIT
+MIT, but if you write a paper referencing this repo some mention would be nice
