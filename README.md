@@ -66,8 +66,7 @@ https://docs.astral.sh/uv
 git clone thishit
 cd causal-experiment
 
-uv sync
-uv build && uv pip install -e .
+uv sync && uv build && uv pip install -e .
 
 causal-experiment --generate -o '1,1,1,1,1;0,0,0,0,0'
 ```
