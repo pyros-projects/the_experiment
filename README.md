@@ -10,7 +10,7 @@ o1 pro says about the experiment and its results:
 This challenges some common assumptions about LLMs.
 ```
 
-TL;DR: A model learns rules and predicts outcomes based on these rules. The impressive part: it works on new data it hasn't seen before and can handle multi-step dependencies (output depends on output), suggesting f*ck the parrots. 
+TL;DR: A model learns rules and predicts outcomes based on these rules. The impressive part: it works on new data it hasn't seen before and can handle multi-step dependencies (a part of the output depends on the output itself), suggesting f*ck the parrots. 
 
 ## Overview
 
