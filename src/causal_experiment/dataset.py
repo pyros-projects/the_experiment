@@ -41,7 +41,7 @@ def manual_test(prompt):
     new_sum = new_B + new_C + new_D + new_A
 
     text_before = (f"{a},{b},{c},{d},{e}")
-    text_after = (f"\{new_A_str},{new_B_str},{new_C_str},{new_D_str}\n{old_sum} - {new_sum}\n")
+    text_after = (f"\n{new_A_str},{new_B_str},{new_C_str},{new_D_str}\n{old_sum} - {new_sum}\n")
 
     return {
         "prompt": text_before,
@@ -105,7 +105,7 @@ def generate_example(to_omit_list=None):
     new_D_str = str(bool2int(new_D))
     
 
-    text_after = (f"\{new_A_str},{new_B_str},{new_C_str},{new_D_str}\n{old_sum} - {new_sum}\n")
+    text_after = (f"\n{new_A_str},{new_B_str},{new_C_str},{new_D_str}\n{old_sum} - {new_sum}\n")
     
     return {
         "prompt": text_before,
