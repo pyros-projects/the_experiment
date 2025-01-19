@@ -2,11 +2,11 @@
 
 This project implements a causal reasoning experiment using a small GPT-2 model to learn structural equations and predict state changes in a system/'world' of boolean variables and basic arithmetic.
 
-Hopefully it shows that an LLM indeed builds up a causal world model that goes beyond pattern matching.
+Hopefully it hints at an LLM indeed building up a causal world model that goes beyond pattern matching.
 
 #### **TL;DR**
 
-A model learns rules and predicts outcomes based on these rules. The impressive part: it works on new data it hasn't seen before and can handle multi-step dependencies (a part of the output depends on the output itself), suggesting f*ck the parrots and their handlers 
+A model learns rules and predicts outcomes based on these rules. The cool stuff: it works on new data it hasn't seen before and can handle multi-step dependencies (a part of the output depends on the output itself), suggesting f*ck the parrots and their handlers 
 
 ## Overview
 
@@ -197,6 +197,30 @@ explicit = true
 ```
 
 Or just remove above blocks from the file to let your system and your python cache decide. Sometimes it works
+
+## FAQ
+
+- Is this hard proof for metaphysical shenanigans, real understanding?
+
+What do I know? I'm just a software architect, and it's the weekend, so I won't bother our research guys with my shit... but probably not, really.
+You’d have to do some serious mathematical pre-work to show that reverse-engineering rules of this is complex enough. You’d likely need to build up a more complex rule set and then demonstrate why this rule set works as serious evidence while others don’t. I’m not the guy for this shit.
+
+But one thing you can prove with it: “LLMs only know things in the training data” is wrong—if you have something not in the training data that the model can solve.
+
+Also, it’s probably not that hard to imagine, that if a reduced GPT-2 model can solve these sequences, a 400B parameter SOTA model will likely learn things in completely different dimensions. Think of this experiment as a kind of thought game: reducing the complexity of a 'real' model into something you can still intuitively grasp and understand and just f*ck around with.
+
+Feel free to experiment with the rules in this setup. Maybe you’ll find a set of really complex stuff that still works? Let me know!
+
+- What comes next?
+
+I’ve always wanted some kind of LLM playground where you can do small experiments like these and play with them, get analyses, like weight activation heat maps or whatever, and have some manipulation tools. For example: What happens if you flip some weights mid-inference? Or What changes if you nuke part of the model? Then you could see how the model adapts.
+Of course, I’d include bleeding-edge stuff too... like trying out rStar or experimenting with ways to imprint other kinds of "thinking processes" into an LLM, instead of just relying on CoT reasoning all the time. Like what happens if you not distill COT into an LLM, but the ReAct pattern? Plenty of ideas for an experiment kit.
+
+Also, I promised the localllama sub I’d make them a virtual anime waifu with infinite context.
+
+So yeah, I’ll probably build some UI around this and slowly add features to it.
+
+
 
 ## Discord
 
