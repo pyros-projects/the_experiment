@@ -67,20 +67,6 @@ def load_jsonl(path: str) -> List[Dict[str, Any]]:
         logger.error(f"Error reading file {path}: {e}")
         raise
     
-def save_dataset_to_json(dataset, output_path):
-    """
-    Save a HuggingFace dataset to JSON file.
-    
-    Args:
-        dataset: HuggingFace dataset
-        output_path: Path to save the JSON file
-    """
-    # Convert dataset to list of dictionaries
-    data_list = [dict(example) for example in dataset]
-    
-    # Save to JSON
-    with open(output_path, 'w', encoding='utf-8') as f:
-        json.dump(data_list, f, indent=2, ensure_ascii=False)
 
 def create_hf_dataset(jsonl_data: List[Dict[str, str]]) -> Dataset:
     """
@@ -108,8 +94,6 @@ def create_hf_dataset(jsonl_data: List[Dict[str, str]]) -> Dataset:
     
     logger.success(f"Created dataset with {len(texts)} examples")
     hf_dataset = Dataset.from_list(texts)
-
-    save_dataset_to_json(hf_dataset, "hf_dataset.json")
     return hf_dataset
 
 def tokenize_function(example: Dict[str, str], tokenizer: GPT2TokenizerFast) -> Dict[str, torch.Tensor]:
