@@ -182,7 +182,12 @@ explicit = true
 
 Or just remove above blocks from the file to let your system and your python cache decide. Sometimes it works
 
+## Discord
 
+If you want me to read you pls 
+https://discord.gg/PSa9EMEMCe
+
+I will literally check nothing else. no mail, no github issues, no reddit messages.
 
 ## License
 
