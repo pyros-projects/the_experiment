@@ -46,7 +46,7 @@ Each example in the dataset consists of:
 Example:
 ```
 Input: "1,0,1,0,1"
-Output: "1,1,0,1\\n3 - 3"
+Output: "0,1,0,1\\n3 - 3"
 ```
 
 ## Installation
