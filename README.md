@@ -10,6 +10,8 @@ o1 pro says about the experiment and its results:
 This challenges some common assumptions about LLMs.
 ```
 
+TL;DR: A model learns rules and predicts outcomes based on these rules. The impressive part: it works on new data it hasn't seen before and can handle multi-step dependencies (output depends on output), suggesting f*ck the parrots. 
+
 ## Overview
 
 The experiment models a system of 5 boolean variables (A, B, C, D, E) with the following structural equations and rules:
