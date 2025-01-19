@@ -116,7 +116,7 @@ def generate_example(to_omit_list=None):
         "completion": text_after
     }
 
-def generate_dataset(n_examples, out_path, to_omit_list=None):
+def generate_dataset(n_examples, out_path, to_omit_list=None) -> list:
     data = []
     for _ in range(n_examples):
         ex = generate_example(to_omit_list)
@@ -129,5 +129,7 @@ def generate_dataset(n_examples, out_path, to_omit_list=None):
     with open(out_path, "w") as f:
         for d in data:
             f.write(json.dumps(d) + "\n")
+            
+    return data
 
 
