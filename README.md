@@ -4,13 +4,15 @@ This project implements a causal reasoning experiment using a small GPT-2 model 
 
 Hopefully it shows that an LLM indeed builds up a causal world model that goes beyond pattern matching.
 
+#### **TL;DR**
+
+A model learns rules and predicts outcomes based on these rules. The impressive part: it works on new data it hasn't seen before and can handle multi-step dependencies (a part of the output depends on the output itself), suggesting f*ck the parrots and their handlers 
+
 o1 pro says about the experiment and its results:
 
 ```
 This challenges some common assumptions about LLMs.
 ```
-
-TL;DR: A model learns rules and predicts outcomes based on these rules. The impressive part: it works on new data it hasn't seen before and can handle multi-step dependencies (a part of the output depends on the output itself), suggesting f*ck the parrots. 
 
 ## Overview
 
