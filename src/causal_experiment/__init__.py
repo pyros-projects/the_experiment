@@ -24,7 +24,7 @@ def main() -> None:
     group.add_argument('--test', type=str, help='Test with a single sequence (format: 0,1,0,1,0)')
     group.add_argument('--train', action='store_true', help='Train the model')
     group.add_argument('--generate', action='store_true', help='Generate sequences')
-    group.add_argument('--calculator', action='store_true')
+    group.add_argument('--testui', action='store_true')
     
     # Optional output parameter for generate
     parser.add_argument('-o', '--omit', type=str, 
@@ -41,7 +41,7 @@ def main() -> None:
     elif args.train:
         call_training()
         
-    elif args.calculator:
+    elif args.testui:
         # start webserver
         serve()
         

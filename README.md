@@ -151,6 +151,17 @@ causal-experiment --test '1,0,1,0,1'
 Marvel at this shit, and shove it up the luddites and their parrots.
 
 
+### Test UI
+
+```bash
+causal-experiment --testui
+```
+
+If you are more the clicking type, this is for you
+
+![alt text](.img/testui.png)
+
+
 
 
 ## Model Architecture
