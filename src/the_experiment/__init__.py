@@ -5,6 +5,7 @@ from fasthtml.components import Sl_tab_group,Sl_tab,Sl_tab_panel,Sl_select,Sl_op
 from devtools import debug
 from monsterui.all import *
 
+from the_experiment.comparison.train_mann import training_mann
 from the_experiment.dataset import generate_dataset
 from the_experiment.comparison.model_eval import ModelEvaluator
 from the_experiment.modules.calculator_view import CalculatorView
@@ -16,6 +17,7 @@ from the_experiment.state.state import MODEL_EVALUATOR
 from the_experiment.train_small_causal_model import training
 from the_experiment.comparison.train_rnn import training_rnn
 from the_experiment.comparison.train_cnn import training_cnn
+from the_experiment.comparison.train_cnn2 import training_cnn2
 from the_experiment.modules.shoelace_app import app as shoelace_app
 from the_experiment.components.dataset_list import tasks_homepage
 from the_experiment.comparison.load_model import output_folders
@@ -78,6 +80,8 @@ def main() -> None:
     group.add_argument('--train_all', type=str, help='Train all models')
     group.add_argument('--train_rnn', type=str, help='Train a rnn for comparison')
     group.add_argument('--train_cnn', type=str, help='Train a cnn for comparison')
+    group.add_argument('--train_cnn2', type=str, help='Train a cnn for comparison')
+    group.add_argument('--train_mann', type=str, help='Train a mann for comparison')
     group.add_argument('--generate', action='store_true', help='Generate sequences')
     group.add_argument('--testui', action='store_true')
     group.add_argument('--app', action='store_true')
@@ -122,6 +126,14 @@ def main() -> None:
     elif args.train_cnn:
         folder = args.train_cnn
         training_cnn(folder)
+        
+    elif args.train_cnn2:
+        folder = args.train_cnn2
+        training_cnn2(folder)
+        
+    elif args.train_mann:
+        folder = args.train_mann
+        training_mann(folder)
         
     elif args.testui:
         # start webserver

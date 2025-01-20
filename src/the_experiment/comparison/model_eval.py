@@ -7,6 +7,7 @@ from devtools import debug
 class ModelEvaluator:
     def __init__(self,folder_contents: List[FolderContents]):
         self.folder_contents = folder_contents
+        self.active_folder = None
         if len(self.folder_contents) > 0:
             self.active_folder = self.folder_contents[0].folder
             self.reload_models(self.folder_contents[0].folder)

@@ -13,11 +13,11 @@ import time
 from tqdm import tqdm
 
 from the_experiment.comparison.load_data import MiniworldTextDataset
-from the_experiment.comparison.cnn_lm import CNNLanguageModel
+from the_experiment.comparison.cnn2_lm import CNNLanguageModel
 
 # Configure loguru
 log_dir = Path("logs")
-log_dir.mkdir(exist_ok=True)
+log_dir.mkdir(exist_ok=True,parents=True)
 
 logger.remove()
 logger.add(
@@ -81,14 +81,14 @@ def validate_model(
     finally:
         model.train()
 
-def training_cnn(folder):
+def training_cnn2(folder):
     """Main training function for the CNN language model."""
     try:
         # Setup
         start_time = time.time()
         device = setup_training_environment()
         out_dir = Path(f"out/{folder}")
-        out_dir.mkdir(exist_ok=True)
+        out_dir.mkdir(exist_ok=True,parents=True)
         
         # Initialize tokenizer
         logger.info("Initializing tokenizer")
@@ -183,10 +183,10 @@ def training_cnn(folder):
                     'model_state_dict': model.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
                     'val_loss': val_loss,
-                }, f'{out_dir}/cnn_lm_best.pt')
+                }, f'{out_dir}/cnn2_lm_best.pt')
 
         # Save final model
-        torch.save(model.state_dict(), f"{out_dir}/cnn_lm_final.pt")
+        torch.save(model.state_dict(), f"{out_dir}/cnn2_lm_final.pt")
         
         # Training summary
         total_time = time.time() - start_time

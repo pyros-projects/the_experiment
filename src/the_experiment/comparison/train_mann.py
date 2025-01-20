@@ -17,7 +17,7 @@ from the_experiment.comparison.mann_lm import MANNLanguageModel
 
 # Configure loguru
 log_dir = Path("logs")
-log_dir.mkdir(exist_ok=True)
+log_dir.mkdir(exist_ok=True,parents=True)
 
 logger.remove()
 logger.add(
@@ -97,7 +97,7 @@ def training_mann(folder):
         start_time = time.time()
         device = setup_training_environment()
         out_dir = Path(f"out/{folder}")
-        out_dir.mkdir(exist_ok=True)
+        out_dir.mkdir(exist_ok=True,parents=True)
         
         # Initialize tokenizer
         logger.info("Initializing tokenizer")

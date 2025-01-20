@@ -116,7 +116,11 @@ def load_cnn(folder:str):
 def load_models(folder:str):
     if not folder:
         return None
-    llm_model, tokenizer = load_model(folder)
+    loader = load_model(folder)
+    if not loader:
+        llm_model, tokenizer = None, None
+    else:
+        llm_model, tokenizer = loader
     rnn_model = load_rnn(folder)
     cnn_model = load_cnn(folder)
     return llm_model,rnn_model,cnn_model, tokenizer

@@ -18,7 +18,7 @@ from the_experiment.comparison.rnn_lm import LSTMLanguageModel
 # Configure loguru
 # Create logs directory if it doesn't exist
 log_dir = Path("logs")
-log_dir.mkdir(exist_ok=True)
+log_dir.mkdir(exist_ok=True,parents=True)
 
 logger.remove()  # Remove default handler
 logger.add(
@@ -128,7 +128,7 @@ def training_rnn(folder):
         start_time = time.time()
         device = setup_training_environment()
         out_dir = Path(f"out/{folder}")
-        out_dir.mkdir(exist_ok=True)
+        out_dir.mkdir(exist_ok=True,parents=True)
         
         # Initialize tokenizer
         logger.info("Initializing tokenizer")
