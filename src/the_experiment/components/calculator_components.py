@@ -5,14 +5,15 @@ from devtools import debug
 from the_experiment.dataset import int2bool
 from the_experiment.comparison.model_eval import eval_model_bool, eval_model_int, eval_rnn_bool
 
-def boolean_circle(value: bool, name: str, onclick: str):
+def boolean_circle(value: bool, name: str, onclick: str,htmx_target="#main-content"):
     color = "bg-blue-500" if value else "bg-gray-200"
     text_color = "text-white" if value else "text-gray-800"
     return Div(
         value and "1" or "0",
         cls=f"rounded-full w-12 h-12 flex items-center justify-center cursor-pointer {color} {text_color}",
         hx_post=onclick,
-        hx_target="#main-content"
+        hx_target=htmx_target,
+        hx_swap="outerHTML",
     )
 
 def boolean_row(label: str, value: bool, onclick: str = None):
@@ -23,24 +24,24 @@ def boolean_row(label: str, value: bool, onclick: str = None):
     )
     
     
-def InputGrid(A,B,C,D,E):
+def InputGrid(A,B,C,D,E,htmx_path="/toggle",htmx_target="#main-content"):
     cls = "justify-items-center"
-    return Div(cls="grid grid-cols-5 gap-2 w-[50%]")(
+    return Div(cls="grid grid-cols-5 gap-2 w-[70%]")(
            Div(H1("A"),cls=cls),
            Div(H1("B"),cls=cls),
            Div(H1("C"),cls=cls),
            Div(H1("D"),cls=cls),
            Div(H1("E"),cls=cls),
-           Div(boolean_circle(A, "A", "/toggle/A"),cls=cls),
-           Div(boolean_circle(B, "B", "/toggle/B"),cls=cls),
-           Div(boolean_circle(C, "C", "/toggle/C"),cls=cls),
-           Div(boolean_circle(D, "D", "/toggle/D"),cls=cls),
-           Div(boolean_circle(E, "E", "/toggle/E"),cls=cls),
+           Div(boolean_circle(A, "A", htmx_path+"/A",htmx_target),cls=cls),
+           Div(boolean_circle(B, "B", htmx_path+"/B",htmx_target),cls=cls),
+           Div(boolean_circle(C, "C", htmx_path+"/C",htmx_target),cls=cls),
+           Div(boolean_circle(D, "D", htmx_path+"/D",htmx_target),cls=cls),
+           Div(boolean_circle(E, "E", htmx_path+"/E",htmx_target),cls=cls),
     )
 
 def OutputGrid(newA,newB,newC,newD):
     cls = "justify-items-center"
-    return Div(cls="grid grid-cols-4 gap-2 w-[50%]")(
+    return Div(cls="grid grid-cols-4 gap-2 w-[60%]")(
            Div(H1("new_A"),cls=cls),
            Div(H1("new_B"),cls=cls),
            Div(H1("new_C"),cls=cls),
@@ -66,12 +67,11 @@ def ModelOutputGrid(A,B,C,D,E):
     split_output = model_output.split("\n")
     new_vals = split_output[1].split(",")
     newA = int2bool(new_vals[0])
+    sum_in = split_output[2].split("-")
     
     return Div(
-            H2("Model Inference (LLM)", cls="text-xl font-bold mb-4"),
-            Pre(f"{model_output}", cls="bg-gray-100 p-4 rounded-lg  w-[70%]"),
-            H2("Output State", cls="text-xl font-bold mb-4"),
-            Div(cls="grid grid-cols-4 gap-2 w-[50%]")(
+            Pre(f"{model_output}", cls="bg-gray-100 p-4 rounded-lg  w-[100%]"),
+            Div(cls="grid grid-cols-4 gap-2 w-[60%]")(
                 Div(H1("new_A"),cls=cls),
                 Div(H1("new_B"),cls=cls),
                 Div(H1("new_C"),cls=cls),
@@ -81,8 +81,8 @@ def ModelOutputGrid(A,B,C,D,E):
                 Div(boolean_circle(new_vals[2]=="1", "new_C",None),cls=cls),
                 Div(boolean_circle(new_vals[3]=="1", "new_D",None),cls=cls),
             ),
-            Div(f"Output Sum: {split_output[2]}", cls="mt-4 font-bold"),
-            cls="space-y-4 mt-4 justify-items-center"
+            Div(f"Input Sum: {sum_in[0]} - Output Sum: {sum_in[1]}", cls="mt-4 font-bold"),
+            cls="space-y-4 mt-0 justify-items-center  h-[275px]"
         )
 
 
@@ -101,11 +101,11 @@ def RnnOutputGrid(A,B,C,D,E):
     new_vals = split_output[1].split(",")
     newA = int2bool(new_vals[0])
     
+    sum_in = split_output[2].split("-")
+    
     return Div(
-            H2("Model Inference (RNN)", cls="text-xl font-bold mb-4"),
-            Pre(f"{model_output}", cls="bg-gray-100 p-4 rounded-lg  w-[70%]"),
-            H2("Output State", cls="text-xl font-bold mb-4"),
-            Div(cls="grid grid-cols-4 gap-2 w-[50%]")(
+            Pre(f"{model_output}\n ", cls="bg-gray-100 p-4 rounded-lg  w-[100%]"),
+            Div(cls="grid grid-cols-4 gap-2 w-[60%]")(
                 Div(H1("new_A"),cls=cls),
                 Div(H1("new_B"),cls=cls),
                 Div(H1("new_C"),cls=cls),
@@ -115,6 +115,6 @@ def RnnOutputGrid(A,B,C,D,E):
                 Div(boolean_circle(new_vals[2]=="1", "new_C",None),cls=cls),
                 Div(boolean_circle(new_vals[3]=="1", "new_D",None),cls=cls),
             ),
-            Div(f"Output Sum: {split_output[2]}", cls="mt-4 font-bold"),
-            cls="space-y-4 mt-4 justify-items-center"
+            Div(f"Input Sum: {sum_in[0]} - Output Sum: {sum_in[1]}", cls="mt-4 font-bold"),
+            cls="space-y-4 mt-0 justify-items-center h-[275px]"
         )

@@ -3,9 +3,9 @@ from transformers import GPT2LMHeadModel, GPT2TokenizerFast
 from the_experiment.comparison.rnn_lm import LSTMLanguageModel  
 from the_experiment.comparison.cnn_lm import CNNLanguageModel
 
-DEFAULT_PATH = "./out/tiny-gpt2-causal/final"
-DEFAULT_RNN = "./out/rnn_lm_final.pt"
-DEFAULT_CNN = "./out/cnn_lm_final.pt"
+DEFAULT_PATH = "./out/all/tiny-gpt2-causal/final"
+DEFAULT_RNN = "./out/all/rnn_lm_final.pt"
+DEFAULT_CNN = "./out/all/cnn_lm_final.pt"
 
 
 def load_rnn():

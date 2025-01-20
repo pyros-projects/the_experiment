@@ -5,54 +5,9 @@ import numpy as np
 import plotly.express as px
 import json
 
-# Initialize FastHTML app with HTMX
-app, rt = fast_app(
-    pico=True,
-    htmx=True,
-    style=(
-        Style("""
-            .controls {
-                margin: 1rem 0;
-                display: flex;
-                gap: 1rem;
-            }
-            .control-group {
-                flex: 1;
-            }
-            .heatmap-container {
-                width: 100%;
-                height: 800px;
-                margin: 20px 0;
-            }
-            .stats-list {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 1rem;
-                margin: 1rem 0;
-            }
-            .stat-card {
-                background: #f8f9fa;
-                padding: 1rem;
-                border-radius: 4px;
-            }
-        """)
-    ),
-    hdrs=(
-        Script(src="https://cdn.plot.ly/plotly-2.24.1.min.js"),
-        
-    )
-)
 
-# Load model
-MODEL_PATH = "./out/tiny-gpt2-causal/final"
-try:
-    model = GPT2LMHeadModel.from_pretrained(MODEL_PATH)
-    model.eval()
-except Exception as e:
-    model = None
-    print(f"Error loading model: {e}")
 
-def get_layer_weights(layer_idx=0, component="mlp"):
+def get_layer_weights(model,layer_idx=0, component="mlp"):
     """Get weights from a specific layer and component"""
     try:
         if component == "mlp":
@@ -142,56 +97,9 @@ def create_stats_cards(stats):
         cls="stats-list"
     )
 
-@rt("/weights")
-def get(layer: int = 0, component: str = "mlp"):
-    """HTMX endpoint for weight updates"""
-    weights, stats = get_layer_weights(layer, component)
-    
-    if component == "mlp":
-        # Create MLP heatmap
-        plot_data = create_heatmap(
-            weights, 
-            f"Layer {layer} MLP Weights"
-        )
-        
-        return Div(
-            H3(f"Layer {layer} MLP Weights"),
-            P(f"Weight matrix shape: {weights.shape[0]}×{weights.shape[1]}"),
-            create_stats_cards(stats),
-            # Single container for MLP
-            Div(
-                Div(id="heatmap", cls="heatmap-container"),
-                Script(f"Plotly.newPlot('heatmap', {plot_data});")
-            )
-        )
-    else:
-        # Create containers for each attention component
-        sections = []
-        for name in ['query', 'key', 'value']:
-            plot_data = create_heatmap(
-                weights[name],
-                f"Layer {layer} {name.title()} Weights"
-            )
-            
-            sections.extend([
-                H3(f"Layer {layer} {name.title()} Weights"),
-                P(f"Weight matrix shape: {weights[name].shape[0]}×{weights[name].shape[1]}"),
-                create_stats_cards(stats[name]),
-                Div(
-                    Div(id=f"heatmap-{name}", cls="heatmap-container"),
-                    Script(f"Plotly.newPlot('heatmap-{name}', {plot_data});")
-                )
-            ])
-            
-        return Div(*sections)
 
-@rt("/")
-def get():
-    """Main page with controls"""
-    if model is None:
-        return Titled("Weight Display Test", 
-                     P("Error: Model could not be loaded"))
     
+def render_view(model):
     return Titled(
         "Weight Visualization",
         Div(
@@ -237,5 +145,67 @@ def get():
         )
     )
 
-if __name__ == "__main__":
-    serve()
+
+def WeightHeatmap(rt):
+    """Main page with controls"""
+    
+    
+    # Load model
+    MODEL_PATH = "./out/all/tiny-gpt2-causal/final"
+    try:
+        model = GPT2LMHeadModel.from_pretrained(MODEL_PATH)
+        model.eval()
+    except Exception as e:
+        model = None
+        print(f"Error loading model: {e}")
+    
+    if model is None:
+        return Titled("Weight Display Test", 
+                     P("Error: Model could not be loaded"))
+        
+        
+    @rt("/weights")
+    def get(layer: int = 0, component: str = "mlp"):
+        """HTMX endpoint for weight updates"""
+        weights, stats = get_layer_weights(model,layer, component)
+        
+        if component == "mlp":
+            # Create MLP heatmap
+            plot_data = create_heatmap(
+                weights, 
+                f"Layer {layer} MLP Weights"
+            )
+            
+            return Div(
+                H3(f"Layer {layer} MLP Weights"),
+                P(f"Weight matrix shape: {weights.shape[0]}×{weights.shape[1]}"),
+                create_stats_cards(stats),
+                # Single container for MLP
+                Div(
+                    Div(id="heatmap", cls="heatmap-container"),
+                    Script(f"Plotly.newPlot('heatmap', {plot_data});")
+                )
+            )
+        else:
+            # Create containers for each attention component
+            sections = []
+            for name in ['query', 'key', 'value']:
+                plot_data = create_heatmap(
+                    weights[name],
+                    f"Layer {layer} {name.title()} Weights"
+                )
+                
+                sections.extend([
+                    H3(f"Layer {layer} {name.title()} Weights"),
+                    P(f"Weight matrix shape: {weights[name].shape[0]}×{weights[name].shape[1]}"),
+                    create_stats_cards(stats[name]),
+                    Div(
+                        Div(id=f"heatmap-{name}", cls="heatmap-container"),
+                        Script(f"Plotly.newPlot('heatmap-{name}', {plot_data});")
+                    )
+                ])
+                
+            return Div(*sections)
+    
+    return render_view(model)
+

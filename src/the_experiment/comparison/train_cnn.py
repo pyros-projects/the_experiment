@@ -126,7 +126,7 @@ def validate_model(
     finally:
         model.train()
 
-def training_cnn():
+def training_cnn(folder):
     """
     Main training function for the CNN language model.
     """
@@ -134,7 +134,7 @@ def training_cnn():
         # Setup
         start_time = time.time()
         device = setup_training_environment()
-        out_dir = Path("out")
+        out_dir = Path(f"out/{folder}")
         out_dir.mkdir(exist_ok=True)
         
         # Initialize tokenizer
