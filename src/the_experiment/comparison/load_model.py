@@ -69,7 +69,7 @@ output_folders = check_out_folder()
 def load_rnn(folder):
     if not folder:
         return None
-    model_path = Path.joinpath(DEFAULT_OUT, folder, DEFAULT_RNN)
+    model_path = Path(DEFAULT_OUT) / folder / DEFAULT_RNN
     if not model_path.exists():
         return None
     model = LSTMLanguageModel(
@@ -93,7 +93,7 @@ def load_rnn(folder):
 def load_cnn(folder:str):
     if not folder:
         return None
-    model_path = Path.joinpath(DEFAULT_OUT, folder, DEFAULT_RNN)
+    model_path = Path(DEFAULT_OUT) / folder / DEFAULT_CNN
     if not model_path.exists():
         return None
     
@@ -126,7 +126,7 @@ def load_model(folder: str):
     if not folder:
         return None
     
-    model_path = Path.joinpath(DEFAULT_OUT, Path(folder), DEFAULT_LLM)
+    model_path = Path(DEFAULT_OUT) / folder / DEFAULT_LLM
     if not model_path.exists():
         return None
 

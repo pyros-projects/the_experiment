@@ -2,8 +2,9 @@ from dataclasses import dataclass
 from fasthtml.common import *
 from monsterui.all import *
 from fasthtml.components import Sl_card,Sl_tab,Sl_tab_panel,Sl_checkbox, Sl_button
-from the_experiment.components.calculator_components import InputGrid, OutputGrid, ModelOutputGrid,RnnOutputGrid
+from the_experiment.components.calculator_components import CnnOutputGrid, InputGrid, OutputGrid, ModelOutputGrid,RnnOutputGrid
 from the_experiment.rules.rules import RULES
+from the_experiment.state.state import MODEL_EVALUATOR
 
 
 
@@ -36,23 +37,27 @@ def render_state(state: BooleanState):
        
         # Input state
         Div(cls="grid grid-cols-3 gap-4 w-[1200px]")(
-            Div(),
             Sl_card(Div(Strong("Input Sequence"),slot="header"),Div(
                 #H2("Input State", cls="text-xl font-bold mb-4"),
                 InputGrid(state.A, state.B, state.C, state.D, state.E),
                 Div(f"Input Sum: {old_sum}", cls="mt-4 font-bold"),
                 cls="space-y-4 justify-items-center"
             ),cls="w-[400px]"),
-            Div(),
+            Sl_card(Div(Strong(f"Model Inference // LLM ({MODEL_EVALUATOR.active_folder})"),slot="header"),ModelOutputGrid(state.A, state.B, state.C, state.D, state.E),cls="w-[400px]"),
+            Sl_card(Div(Strong(f"Model Inference // RNN ({MODEL_EVALUATOR.active_folder})"),slot="header"),RnnOutputGrid(state.A, state.B, state.C, state.D, state.E),cls="w-[400px]"),
             Sl_card(Div(Strong("Fact // Transformation Rules"),slot="header"),Div(
                 Pre(RULES, cls="bg-gray-100 p-4 rounded-lg  w-[100%]"),
                 OutputGrid(new_A,new_B,new_C,new_D),    
                 Div(f"Output Sum: {new_sum}", cls="mt-4 font-bold"),
                 cls="mt-0 space-y-4 justify-items-center h-[275px]"
             ),cls="w-[400px] "),
-            Sl_card(Div(Strong("Model Inference // LLM"),slot="header"),ModelOutputGrid(state.A, state.B, state.C, state.D, state.E),cls="w-[400px]"),
+            
+            Sl_card(Div(Strong(f"Model Inference // CNN ({MODEL_EVALUATOR.active_folder})"),slot="header"),CnnOutputGrid(state.A, state.B, state.C, state.D, state.E),cls="w-[400px]"),
+            Div(),
+            
+            
 
-            Sl_card(Div(Strong("Model Inference // RNN"),slot="header"),RnnOutputGrid(state.A, state.B, state.C, state.D, state.E),cls="w-[400px]"),
+            
         ),
         
         
