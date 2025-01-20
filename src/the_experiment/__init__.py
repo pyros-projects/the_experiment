@@ -1,9 +1,9 @@
 import random
 import argparse
-from causal_experiment.dataset import generate_dataset, manual_test
-from causal_experiment.eval import model_eval
-from causal_experiment.modules.calculator_view import CalculatorView
-from causal_experiment.train_small_causal_model import training
+from the_experiment.dataset import generate_dataset, manual_test
+from the_experiment.eval import model_eval
+from the_experiment.modules.calculator_view import CalculatorView
+from the_experiment.train_small_causal_model import training
 from devtools import debug
 from fasthtml.common import *
 

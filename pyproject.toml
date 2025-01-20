@@ -1,5 +1,5 @@
 [project]
-name = "causal-experiment"
+name = "the-experiment"
 version = "0.2.3"
 description = "Add your description here"
 readme = "README.md"
@@ -34,7 +34,7 @@ url = "https://download.pytorch.org/whl/cu124"
 explicit = true
 
 [project.scripts]
-causal-experiment = "causal_experiment:main"
+the-experiment = "the_experiment:main"
 
 [build-system]
 requires = ["hatchling"]

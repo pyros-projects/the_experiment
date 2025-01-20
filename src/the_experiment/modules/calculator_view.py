@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from fasthtml.common import *
 
-from causal_experiment.components.calculator_components import InputGrid, OutputGrid, ModelOutputGrid
+from the_experiment.components.calculator_components import InputGrid, OutputGrid, ModelOutputGrid
 
 RULES="""new_A = A XOR C
 new_B = NOT D  

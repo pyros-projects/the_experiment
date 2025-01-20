@@ -2,8 +2,8 @@
 from dataclasses import dataclass
 from fasthtml.common import *
 from devtools import debug
-from causal_experiment.dataset import int2bool
-from causal_experiment.eval.model_eval import eval_model_bool, eval_model_int
+from the_experiment.dataset import int2bool
+from the_experiment.eval.model_eval import eval_model_bool, eval_model_int
 
 def boolean_circle(value: bool, name: str, onclick: str):
     color = "bg-blue-500" if value else "bg-gray-200"

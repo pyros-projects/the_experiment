@@ -2,7 +2,7 @@ import torch
 from transformers import GPT2LMHeadModel, GPT2TokenizerFast
 from devtools import debug
 
-from causal_experiment.dataset import bool2int
+from the_experiment.dataset import bool2int
 DEFAULT_PATH = "./out/tiny-gpt2-causal/final"
 
 
