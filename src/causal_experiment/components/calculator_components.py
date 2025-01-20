@@ -66,8 +66,6 @@ def ModelOutputGrid(A,B,C,D,E):
     split_output = model_output.split("\n")
     new_vals = split_output[1].split(",")
     newA = int2bool(new_vals[0])
-    debug(new_vals)
-    debug(newA)
     
     return Div(
             H2("Model Inference", cls="text-xl font-bold mb-4"),

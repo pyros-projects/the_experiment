@@ -28,7 +28,6 @@ def eval_model(prompt_text: str) -> str:
             )
             
         output = tokenizer.decode(output[0])
-        debug(output)
         return str(output)
     except Exception as e:
         return None
@@ -42,7 +41,6 @@ def eval_model_bool(a,b,c,d,e) -> str:
     d = str(bool2int(d))
     e = str(bool2int(e))
     prompt = (f"{a},{b},{c},{d},{e}")
-    debug(prompt)
     return eval_model(prompt)
 
 def eval_model_int(a,b,c,d,e) -> str:
@@ -52,5 +50,4 @@ def eval_model_int(a,b,c,d,e) -> str:
     d = str(d)
     e = str(e)
     prompt = (f"{a},{b},{c},{d},{e}")
-    debug(prompt)
     return eval_model(prompt)

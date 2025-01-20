@@ -7,7 +7,6 @@ def bool2int(b:bool):
     return 1 if b else 0
 
 def int2bool(i:int):
-    debug(i)
     return True if i == 1 else False
 
 def manual_test(prompt):
