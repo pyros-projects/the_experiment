@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from fasthtml.common import *
 
-from the_experiment.components.calculator_components import InputGrid, OutputGrid, ModelOutputGrid
+from the_experiment.components.calculator_components import InputGrid, OutputGrid, ModelOutputGrid,RnnOutputGrid
 
 RULES="""new_A = A XOR C
 new_B = NOT D  
@@ -43,7 +43,7 @@ def render_state(state: BooleanState):
             Div(f"Input Sum: {old_sum}", cls="mt-4 font-bold"),
             cls="space-y-4 justify-items-center"
         ),
-        Div(),
+        ModelOutputGrid(state.A, state.B, state.C, state.D, state.E),
         # Rules explanation
         
         Div(
@@ -54,7 +54,7 @@ def render_state(state: BooleanState):
             Div(f"Output Sum: {new_sum}", cls="mt-4 font-bold"),
             cls="mt-4 space-y-4 justify-items-center"
         ),
-        ModelOutputGrid(state.A, state.B, state.C, state.D, state.E),
+        RnnOutputGrid(state.A, state.B, state.C, state.D, state.E),
         # Output state
     
         # Model output

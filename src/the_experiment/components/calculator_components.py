@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from fasthtml.common import *
 from devtools import debug
 from the_experiment.dataset import int2bool
-from the_experiment.comparison.model_eval import eval_model_bool, eval_model_int
+from the_experiment.comparison.model_eval import eval_model_bool, eval_model_int, eval_rnn_bool
 
 def boolean_circle(value: bool, name: str, onclick: str):
     color = "bg-blue-500" if value else "bg-gray-200"
@@ -68,7 +68,41 @@ def ModelOutputGrid(A,B,C,D,E):
     newA = int2bool(new_vals[0])
     
     return Div(
-            H2("Model Inference", cls="text-xl font-bold mb-4"),
+            H2("Model Inference (LLM)", cls="text-xl font-bold mb-4"),
+            Pre(f"{model_output}", cls="bg-gray-100 p-4 rounded-lg  w-[70%]"),
+            H2("Output State", cls="text-xl font-bold mb-4"),
+            Div(cls="grid grid-cols-4 gap-2 w-[50%]")(
+                Div(H1("new_A"),cls=cls),
+                Div(H1("new_B"),cls=cls),
+                Div(H1("new_C"),cls=cls),
+                Div(H1("new_D"),cls=cls),
+                Div(boolean_circle(new_vals[0]=="1", "new_A",None),cls=cls),
+                Div(boolean_circle(new_vals[1]=="1", "new_B",None),cls=cls),
+                Div(boolean_circle(new_vals[2]=="1", "new_C",None),cls=cls),
+                Div(boolean_circle(new_vals[3]=="1", "new_D",None),cls=cls),
+            ),
+            Div(f"Output Sum: {split_output[2]}", cls="mt-4 font-bold"),
+            cls="space-y-4 mt-4 justify-items-center"
+        )
+
+
+def RnnOutputGrid(A,B,C,D,E):
+    cls = "justify-items-center"
+    model_output = eval_rnn_bool(A,B,C,D,E)
+    
+    if model_output is None:
+        return Div(
+            H2("Model Output State", cls="text-xl font-bold mb-4"),
+            Div("Error with loading model", cls="mt-4 font-bold"),
+            cls="space-y-4"
+        )
+        
+    split_output = model_output.split("\n")
+    new_vals = split_output[1].split(",")
+    newA = int2bool(new_vals[0])
+    
+    return Div(
+            H2("Model Inference (RNN)", cls="text-xl font-bold mb-4"),
             Pre(f"{model_output}", cls="bg-gray-100 p-4 rounded-lg  w-[70%]"),
             H2("Output State", cls="text-xl font-bold mb-4"),
             Div(cls="grid grid-cols-4 gap-2 w-[50%]")(

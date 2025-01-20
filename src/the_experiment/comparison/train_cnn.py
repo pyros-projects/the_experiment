@@ -148,17 +148,6 @@ def training_cnn():
         logger.info("Loading datasets")
         try:
             train_dataset = MiniworldTextDataset("dataset/train.jsonl", tokenizer)
-            total_size = len(train_dataset)
-            random_indices = random.sample(range(total_size), min(10, total_size))
-            
-            print(f"\nViewing {10} random entries:")
-            print("=" * 50)
-            
-            # Print each random entry
-            for idx in random_indices:
-                print(f"\nEntry {idx}:")
-                print(train_dataset.data[idx])
-                print("-" * 50)
             valid_dataset = MiniworldTextDataset("dataset/valid.jsonl", tokenizer)
             logger.info(f"Loaded {len(train_dataset)} training examples and {len(valid_dataset)} validation examples")
         except Exception as e:

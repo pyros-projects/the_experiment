@@ -1,7 +1,7 @@
 import random
 import argparse
 from the_experiment.dataset import generate_dataset, manual_test
-from the_experiment.comparison.model_eval import eval_model, eval_rnn
+from the_experiment.comparison.model_eval import eval_model, eval_rnn, eval_cnn
 from the_experiment.modules.calculator_view import CalculatorView
 from the_experiment.train_small_causal_model import training
 from the_experiment.comparison.train_rnn import training_rnn
@@ -94,5 +94,7 @@ def call_test(prompt_text: str) -> dict:
     debug(output_rnn)
 
     # calculate by cnn
+    output_cnn = eval_cnn(prompt_text)
+    debug(output_cnn)
     return str(output)
 
