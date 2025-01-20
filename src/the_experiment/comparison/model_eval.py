@@ -1,12 +1,16 @@
 import torch
-from the_experiment.comparison.load_model import load_model , load_rnn, load_models
+from the_experiment.comparison.load_model import FolderContents, check_out_folder, load_model , load_rnn, load_models
 from the_experiment.dataset import bool2int
 from typing import List, Dict, Optional, Tuple
 from devtools import debug
 
 class ModelEvaluator:
-    def __init__(self,folder):
-        self.reload_models(folder)
+    def __init__(self,folder_contents: List[FolderContents]):
+        self.folder_contents = folder_contents
+        if len(self.folder_contents) > 0:
+            self.active_folder = self.folder_contents[0].folder
+            self.reload_models(self.folder_contents[0].folder)
+            
 
     def reload_models(self,folder):
         loader = load_models(folder)

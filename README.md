@@ -267,6 +267,47 @@ Also, I promised the localllama sub I’d make them a virtual anime waifu with i
 
 So yeah, I’ll probably build some UI around this and slowly add features to it.
 
+- What the hell is a MANN network?
+
+### Memory Augmented Neural Networks (MANNs)
+
+TL;DR: Like a normal neural network but with a separate memory matrix it can write to and read from. Imagine your friend with ADHD got a notebook - they can now remember shit properly by writing it down and checking their notes.
+
+#### What's the deal?
+
+Regular neural networks are like fish - their memory only lasts 3 seconds (okay, that's bullshit about fish, but you get the point). RNNs try to fix this with their hidden state, but they still suck at remembering specific things from 100 steps ago.
+
+MANNs say "fuck this" and add an external memory matrix that the network can interact with. Think of it as a neural network with a USB stick:
+- It can write important stuff to specific memory locations
+- It can read that stuff back later when needed
+- It uses attention to figure out which memory locations to access
+
+The cool part: The whole thing is differentiable, so it can learn what to remember and what to forget by itself. No more hardcoded memory management bullshit.
+
+#### Architecture
+
+- Controller: Regular neural network (LSTM in our case) that decides what to do
+- Memory Matrix: The actual storage (like RAM but for neural nets)
+- Read/Write Heads: Parts that interact with the memory (using attention because we're not savages)
+
+#### Why use this?
+
+- Better at remembering specific details than regular networks
+- Can learn complex patterns that require long-term memory
+- Doesn't just pattern match like your typical RNN
+- Theoretically closer to how actual brains handle memory (but who really knows)
+
+#### How do they compare to LLMs?
+
+Look, compared to modern LLMs, MANNs are like bringing a knife to a nuclear war. But that's not the point - they're interesting because:
+
+- LLMs use self-attention to handle everything including memory, which is like using a sledgehammer to hang a picture
+- MANNs separate computation from memory explicitly, which might be more efficient for certain tasks
+- LLMs need to encode all their "memory" in weights during training, while MANNs can write new memories during inference
+- But LLMs absolutely destroy MANNs in practice because they're just so damn big and have seen so much data
+
+So why even bother? Because sometimes you want to understand how something works by building a simpler version. MANNs let us play with memory mechanisms explicitly instead of having everything wrapped up in a giant transformer's self-attention layers. It's like the difference between building a toy car and trying to understand a Tesla.
+
 
 
 ## Discord
