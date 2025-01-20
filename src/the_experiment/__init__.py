@@ -1,9 +1,11 @@
 import random
 import argparse
 from the_experiment.dataset import generate_dataset, manual_test
-from the_experiment.eval.model_eval import eval_model
+from the_experiment.comparison.model_eval import eval_model, eval_rnn
 from the_experiment.modules.calculator_view import CalculatorView
 from the_experiment.train_small_causal_model import training
+from the_experiment.comparison.train_rnn import training_rnn
+from the_experiment.comparison.train_cnn import training_cnn
 from devtools import debug
 from fasthtml.common import *
 
@@ -23,6 +25,8 @@ def main() -> None:
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--test', type=str, help='Test with a single sequence (format: 0,1,0,1,0)')
     group.add_argument('--train', action='store_true', help='Train the model')
+    group.add_argument('--train_rnn', action='store_true', help='Train a rnn for comparison')
+    group.add_argument('--train_cnn', action='store_true', help='Train a cnn for comparison')
     group.add_argument('--generate', action='store_true', help='Generate sequences')
     group.add_argument('--testui', action='store_true')
     
@@ -39,7 +43,13 @@ def main() -> None:
         
         
     elif args.train:
-        call_training()
+        training()
+
+    elif args.train_rnn:
+        training_rnn()
+
+    elif args.train_cnn:
+        training_cnn()
         
     elif args.testui:
         # start webserver
@@ -68,15 +78,21 @@ def call_generate_dataset(to_omit_list=None) -> None:
     generate_dataset(2000, "dataset/valid.jsonl",to_omit_list)
     generate_dataset(2000, "dataset/test.jsonl",to_omit_list)
     
-def call_training() -> None:
-    training()
-    
+
     
 def call_test(prompt_text: str) -> dict:
+    # calculate by algorithm
     manual_res = manual_test(prompt_text)
     debug(manual_res)
     
+    # calculate by gpt2
     output = eval_model(prompt_text)
     debug(output)
+
+    # calculate by rnn
+    output_rnn = eval_rnn(prompt_text)
+    debug(output_rnn)
+
+    # calculate by cnn
     return str(output)
 

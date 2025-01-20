@@ -142,6 +142,16 @@ The trained model will be saved in `out/tiny-gpt2-causal/final/`.
 
 ![alt text](.img/train.png)
 
+```bash
+the-experiment --train_rnn
+```
+
+```bash
+the-experiment --train_cnn
+```
+
+will train a RNN and a CNN to compare behavior with the LLM
+
 ### Test (sequence in dataset)
 
 Test the model with a specific input sequence:
@@ -167,6 +177,14 @@ the-experiment --test '1,0,1,0,1'
 
 Marvel at this shit, and shove it up the luddites and their parrots.
 Even removing three different sequences are no problem. Feel free to push it to the limit.
+
+if you have a trained RNN oder CNN, the output will include those
+
+![alt text](.img/rnn.png)
+
+Nothing to see here... just a RNN with 7 times the size of the LLM can't figure out the rules of the missing sequences (20% of sequences missing completely in the training data, gpt2 still taking it like a champ)
+
+The rnn struggles hard with the output dependent rules, since pattern matching doesn't help here
 
 
 ### Test UI
