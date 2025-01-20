@@ -1,6 +1,13 @@
 # Causal Reasoning Experiment
 
-This project implements a causal reasoning experiment using a small GPT-2 model to learn structural equations and predict state changes in a system/'world' of boolean variables and basic arithmetic.
+This project implements a causal reasoning experiment using a small GPT-2 model to learn structural equations and predict state changes in a system/'world' of boolean variables and basic arithmetic. 
+
+You can remove sequences from the training data and test how the LLM behaves on data it never saw during training.
+
+- Will it learn rules for the sequences it has seen?
+- Will it learn rules for the sequences it has not seen?
+
+This is for you to try out!
 
 Hopefully it hints at an LLM indeed building up a causal world model that goes beyond pattern matching.
 
@@ -23,7 +30,7 @@ sum(A+B+C+D+E) - sum2(newA+newB+newC+newD)
 
 The model learns to predict how the states of newA, newB, newC and newD update given an initial state configuration.
 
-Note, that for newD and sum2 the system can't infer it directly from the input without 'knowing' the rules, since sequential dependency (newD depending on newB) is not trivial, especially if it's sequential dependency in the output itself
+Note, that for newD and sum2 the system can't infer it directly from the input without 'knowing' the rules, since sequential dependency (newD depending on newB) is not trivial, especially if it's sequential dependency in the output itself.
 
 example
 
@@ -65,6 +72,8 @@ pip install the-experiment
 
 the-experiment --generate -o '1,1,1,1,1;0,0,0,0,0'
 ```
+
+(Don't forgert to call IT afer every step and ask questions like 'Where is the model?')
 
 ### Installation like a software engineer
 
@@ -157,6 +166,7 @@ the-experiment --test '1,0,1,0,1'
 ![alt text](.img/wow.png)
 
 Marvel at this shit, and shove it up the luddites and their parrots.
+Even removing three different sequences are no problem. Feel free to push it to the limit.
 
 
 ### Test UI

@@ -1,7 +1,7 @@
 import random
 import argparse
 from the_experiment.dataset import generate_dataset, manual_test
-from the_experiment.eval import model_eval
+from the_experiment.eval.model_eval import eval_model
 from the_experiment.modules.calculator_view import CalculatorView
 from the_experiment.train_small_causal_model import training
 from devtools import debug
@@ -76,7 +76,7 @@ def call_test(prompt_text: str) -> dict:
     manual_res = manual_test(prompt_text)
     debug(manual_res)
     
-    output = model_eval(prompt_text)
+    output = eval_model(prompt_text)
     debug(output)
     return str(output)
 
