@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from fasthtml.common import *
 from devtools import debug
 from the_experiment.dataset import int2bool
-from the_experiment.comparison.model_eval import eval_model_bool, eval_model_int, eval_rnn_bool
+from the_experiment.comparison.model_eval import ModelEvaluator
+from the_experiment.state.state import loaded_folder
 
 def boolean_circle(value: bool, name: str, onclick: str,htmx_target="#main-content"):
     color = "bg-blue-500" if value else "bg-gray-200"
@@ -53,9 +54,10 @@ def OutputGrid(newA,newB,newC,newD):
     )
     
     
-def ModelOutputGrid(A,B,C,D,E):
+def ModelOutputGrid(A,B,C,D,E,folder=loaded_folder):
     cls = "justify-items-center"
-    model_output = eval_model_bool(A,B,C,D,E)
+    model_eval = ModelEvaluator(folder)
+    model_output = model_eval.eval_model_bool(A,B,C,D,E)
     
     if model_output is None:
         return Div(
@@ -86,9 +88,44 @@ def ModelOutputGrid(A,B,C,D,E):
         )
 
 
-def RnnOutputGrid(A,B,C,D,E):
+def RnnOutputGrid(A,B,C,D,E,folder=loaded_folder):
     cls = "justify-items-center"
-    model_output = eval_rnn_bool(A,B,C,D,E)
+    model_eval = ModelEvaluator(folder)
+    model_output = model_eval.eval_rnn_bool(A,B,C,D,E)
+    
+    if model_output is None:
+        return Div(
+            H2("Model Output State", cls="text-xl font-bold mb-4"),
+            Div("Error with loading model", cls="mt-4 font-bold"),
+            cls="space-y-4"
+        )
+        
+    split_output = model_output.split("\n")
+    new_vals = split_output[1].split(",")
+    newA = int2bool(new_vals[0])
+    
+    sum_in = split_output[2].split("-")
+    
+    return Div(
+            Pre(f"{model_output}\n ", cls="bg-gray-100 p-4 rounded-lg  w-[100%]"),
+            Div(cls="grid grid-cols-4 gap-2 w-[60%]")(
+                Div(H1("new_A"),cls=cls),
+                Div(H1("new_B"),cls=cls),
+                Div(H1("new_C"),cls=cls),
+                Div(H1("new_D"),cls=cls),
+                Div(boolean_circle(new_vals[0]=="1", "new_A",None),cls=cls),
+                Div(boolean_circle(new_vals[1]=="1", "new_B",None),cls=cls),
+                Div(boolean_circle(new_vals[2]=="1", "new_C",None),cls=cls),
+                Div(boolean_circle(new_vals[3]=="1", "new_D",None),cls=cls),
+            ),
+            Div(f"Input Sum: {sum_in[0]} - Output Sum: {sum_in[1]}", cls="mt-4 font-bold"),
+            cls="space-y-4 mt-0 justify-items-center h-[275px]"
+        )
+    
+def CnnOutputGrid(A,B,C,D,E,folder=loaded_folder):
+    cls = "justify-items-center"
+    model_eval = ModelEvaluator(folder)
+    model_output = model_eval.eval_cnn_bool(A,B,C,D,E)
     
     if model_output is None:
         return Div(

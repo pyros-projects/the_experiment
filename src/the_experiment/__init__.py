@@ -6,7 +6,7 @@ from devtools import debug
 from monsterui.all import *
 
 from the_experiment.dataset import generate_dataset
-from the_experiment.comparison.model_eval import eval_model, eval_rnn, eval_cnn
+from the_experiment.comparison.model_eval import ModelEvaluator
 from the_experiment.modules.calculator_view import CalculatorView
 from the_experiment.modules.dataset_view import DatasetView
 from the_experiment.modules.heatmap import WeightHeatmap
@@ -24,10 +24,12 @@ app, rt = shoelace_app
 
 @rt("/")
 def get():
+    global loaded_folder
     folders = output_folders
     pre_selection = ""
     if len(folders) > 0:
         pre_selection = "option-1"
+        loaded_folder = folders[0].folder
     #return CalculatorView(rt)
     return Body(
                 DivHStacked(cls="text-background bg-primary")(
@@ -151,21 +153,23 @@ def call_generate_dataset(to_omit_list=None) -> None:
     
 
     
-def call_test(prompt_text: str) -> dict:
+def call_test(folder,prompt_text: str) -> dict:
     # calculate by algorithm
     manual_res = prompt_to_completion(prompt_text)
     debug(manual_res)
     
+    model_eval = ModelEvaluator(folder)
+    
     # calculate by gpt2
-    output = eval_model(prompt_text)
+    output = model_eval.eval_model(prompt_text)
     debug(output)
 
     # calculate by rnn
-    output_rnn = eval_rnn(prompt_text)
+    output_rnn = model_eval.eval_rnn(prompt_text)
     debug(output_rnn)
 
     # calculate by cnn
-    output_cnn = eval_cnn(prompt_text)
+    output_cnn = model_eval.eval_cnn(prompt_text)
     debug(output_cnn)
     return str(output)
 

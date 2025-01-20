@@ -1,14 +1,15 @@
 from dataclasses import dataclass
 import os
+from pathlib import Path
 import torch
 from transformers import GPT2LMHeadModel, GPT2TokenizerFast
 from the_experiment.comparison.rnn_lm import LSTMLanguageModel  
 from the_experiment.comparison.cnn_lm import CNNLanguageModel
 from datetime import datetime
 
-DEFAULT_PATH = "./out/all/tiny-gpt2-causal/final"
-DEFAULT_RNN = "./out/all/rnn_lm_final.pt"
-DEFAULT_CNN = "./out/all/cnn_lm_final.pt"
+DEFAULT_LLM = "tiny-gpt2-causal/final"
+DEFAULT_RNN = "rnn_lm_final.pt"
+DEFAULT_CNN = "cnn_lm_final.pt"
 DEFAULT_OUT = "./out"
 
 
@@ -65,7 +66,12 @@ def check_out_folder(directory_path=DEFAULT_OUT) -> list[FolderContents]:
 output_folders = check_out_folder()
 
 
-def load_rnn():
+def load_rnn(folder):
+    if not folder:
+        return None
+    model_path = Path.joinpath(DEFAULT_OUT, folder, DEFAULT_RNN)
+    if not model_path.exists():
+        return None
     model = LSTMLanguageModel(
         vocab_size=50257,
         embed_dim=128,
@@ -75,7 +81,7 @@ def load_rnn():
     
     # Load with safety settings
     state_dict = torch.load(
-        DEFAULT_RNN,
+        model_path,
         weights_only=True  # Only load weights
     )
     model.load_state_dict(state_dict)
@@ -84,8 +90,12 @@ def load_rnn():
     model = model.to(device)
     return model    
 
-def load_cnn():
-
+def load_cnn(folder:str):
+    if not folder:
+        return None
+    model_path = Path.joinpath(DEFAULT_OUT, folder, DEFAULT_RNN)
+    if not model_path.exists():
+        return None
     
     model = CNNLanguageModel(
         vocab_size=50257,
@@ -95,7 +105,7 @@ def load_cnn():
         seq_len=64
     )
     
-    state_dict = torch.load(DEFAULT_CNN, weights_only=True)
+    state_dict = torch.load(model_path, weights_only=True)
     model.load_state_dict(state_dict)
     model.eval()
     
@@ -103,19 +113,23 @@ def load_cnn():
     model = model.to(device)
     return model
 
-def load_models():
-    model_path = DEFAULT_PATH
-    tokenizer = GPT2TokenizerFast.from_pretrained(model_path)
-    model = GPT2LMHeadModel.from_pretrained(model_path)
-    model.eval()
-
-    rnn_model = load_rnn()
-    cnn_model = load_cnn()
-    return model,rnn_model,cnn_model, tokenizer
+def load_models(folder:str):
+    if not folder:
+        return None
+    llm_model, tokenizer = load_model(folder)
+    rnn_model = load_rnn(folder)
+    cnn_model = load_cnn(folder)
+    return llm_model,rnn_model,cnn_model, tokenizer
 
 
-def load_model():
-    model_path = DEFAULT_PATH
+def load_model(folder: str):
+    if not folder:
+        return None
+    
+    model_path = Path.joinpath(DEFAULT_OUT, Path(folder), DEFAULT_LLM)
+    if not model_path.exists():
+        return None
+
     tokenizer = GPT2TokenizerFast.from_pretrained(model_path)
     model = GPT2LMHeadModel.from_pretrained(model_path)
     model.eval()
