@@ -1,21 +1,19 @@
 import random
 import argparse
-from causal_experiment.dataset import generate_dataset
+from causal_experiment.dataset import generate_dataset, manual_test
+from causal_experiment.eval import model_eval
+from causal_experiment.modules.calculator_view import CalculatorView
 from causal_experiment.train_small_causal_model import training
-from causal_experiment.calculator import BooleanState, set_routes, render_state
 from devtools import debug
 from fasthtml.common import *
 
-hdrs = ( Script(src="https://cdn.tailwindcss.com"),Script(src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"))
-# Define the app and route
-app, rt = fast_app(hdrs=hdrs, default_hdrs=False, pico=False, live=True)
-state = BooleanState()
+hdrs = (Script(src="https://cdn.tailwindcss.com"),
+        Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/daisyui@4.11.1/dist/full.min.css"))
+app, rt = fast_app(hdrs=hdrs, live=True)
 
 @rt("/")
 def get():
-    set_routes(rt)
-    return Titled("Boolean Logic Transformer", 
-                render_state(state))
+    return CalculatorView(rt)
 
 
 def main() -> None:
@@ -44,6 +42,7 @@ def main() -> None:
         call_training()
         
     elif args.calculator:
+        # start webserver
         serve()
         
     elif args.generate:
@@ -74,30 +73,10 @@ def call_training() -> None:
     
     
 def call_test(prompt_text: str) -> dict:
-    import torch
-    from transformers import GPT2LMHeadModel, GPT2TokenizerFast
-
-    from causal_experiment.dataset import manual_test
     manual_res = manual_test(prompt_text)
     debug(manual_res)
     
-    model_path = "./out/tiny-gpt2-causal/final"
-    tokenizer = GPT2TokenizerFast.from_pretrained(model_path)
-    model = GPT2LMHeadModel.from_pretrained(model_path)
-    model.eval()
-
-
-
-    input_ids = tokenizer.encode(prompt_text, return_tensors="pt")
-    with torch.no_grad():
-        output = model.generate(
-            input_ids,
-            max_length=64,
-            num_return_sequences=1,
-            do_sample=False
-        )
-        
-    output = tokenizer.decode(output[0])
+    output = model_eval(prompt_text)
     debug(output)
     return str(output)
 
