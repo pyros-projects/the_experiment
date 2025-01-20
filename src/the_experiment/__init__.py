@@ -1,7 +1,7 @@
 import random
 import argparse
 from fasthtml.common import *
-from fasthtml.components import Sl_tab_group,Sl_tab,Sl_tab_panel
+from fasthtml.components import Sl_tab_group,Sl_tab,Sl_tab_panel,Sl_select,Sl_option, Sl_icon
 from devtools import debug
 from monsterui.all import *
 
@@ -17,20 +17,37 @@ from the_experiment.comparison.train_rnn import training_rnn
 from the_experiment.comparison.train_cnn import training_cnn
 from the_experiment.modules.shoelace_app import app as shoelace_app
 from the_experiment.components.dataset_list import tasks_homepage
+from the_experiment.comparison.load_model import output_folders
 
 app, rt = shoelace_app
 
 
 @rt("/")
 def get():
+    folders = output_folders
+    pre_selection = ""
+    if len(folders) > 0:
+        pre_selection = "option-1"
     #return CalculatorView(rt)
     return Body(
-            H1("The Experiment",cls="m-auto text-background bg-primary pl-3"),
-            P('LLM experiment toolkit v0.3.5',cls="ml-auto text-background bg-primary pl-3"),
+                DivHStacked(cls="text-background bg-primary")(
+                    Div(
+                        H1("The Experiment",cls="m-auto text-background bg-primary pl-3"),
+                        P('LLM experiment toolkit v0.3.5',cls="ml-auto text-background bg-primary pl-3")
+                    ),
+                    Sl_select(cls="ml-4 w-[200px]",placeholder="Select model folder", value=f"{pre_selection}")(
+                        *[Sl_option(
+                            Sl_icon(slot="suffix",src="icon/llm") if folder.has_llm else Div(),
+                            Sl_icon(slot="suffix",src="icon/rnn") if folder.has_rnn else Div(),
+                            Sl_icon(slot="suffix",src="icon/cnn") if folder.has_cnn else Div(),
+                            Strong(f"{folder.folder}"), value=f"option-{i+1}") for i,folder in enumerate(folders)]
+
+                )),
             Sl_tab_group()(
                 Sl_tab('Test', slot='nav', panel='test'),
                 Sl_tab('Dataset', slot='nav', panel='dataset'),
                 Sl_tab('Train', slot='nav', panel='train'),
+                
                 Sl_tab('Heatmaps', slot='nav', panel='heatmaps'),
                 Sl_tab_panel(CalculatorView(rt), name='test'),
                 Sl_tab_panel(DatasetView(rt), name='dataset'),
@@ -38,6 +55,12 @@ def get():
                 Sl_tab_panel(WeightHeatmap(rt), name='heatmaps'),
             ),
         )
+    
+@rt("/icon/{icon}")
+def get(icon:str):
+    with open(f"src/the_experiment/assets/{icon}.svg") as f:
+        return f.read()
+
 
 
 def main() -> None:

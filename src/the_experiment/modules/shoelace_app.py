@@ -39,4 +39,4 @@ hdrs = (
                 Theme.slate.headers(highlightjs=True,mode='light'),
         )
 
-app = fast_app(hdrs=hdrs,pico=False,default_hdrs=True,live=True)
+app = fast_app(hdrs=hdrs,pico=False,default_hdrs=True,live=True,title="The Experiment")
