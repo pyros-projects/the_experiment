@@ -5,17 +5,18 @@ from fasthtml.components import Sl_tab_group,Sl_tab,Sl_tab_panel
 from devtools import debug
 from monsterui.all import *
 
-from the_experiment.dataset import generate_dataset, manual_test
+from the_experiment.dataset import generate_dataset
 from the_experiment.comparison.model_eval import eval_model, eval_rnn, eval_cnn
 from the_experiment.modules.calculator_view import CalculatorView
 from the_experiment.modules.dataset_view import DatasetView
-from the_experiment.modules.playground3 import WeightHeatmap
+from the_experiment.modules.heatmap import WeightHeatmap
 from the_experiment.modules.train_view import TrainView
+from the_experiment.rules.rules import prompt_to_completion
 from the_experiment.train_small_causal_model import training
 from the_experiment.comparison.train_rnn import training_rnn
 from the_experiment.comparison.train_cnn import training_cnn
 from the_experiment.modules.shoelace_app import app as shoelace_app
-from the_experiment.modules.frankenui02 import tasks_homepage
+from the_experiment.components.dataset_list import tasks_homepage
 
 app, rt = shoelace_app
 
@@ -24,18 +25,17 @@ app, rt = shoelace_app
 def get():
     #return CalculatorView(rt)
     return Body(
-            H1("The Experiment v0.3",cls="mb-4 text-2xl font-bold text-gray-800"),
+            H1("The Experiment",cls="m-auto text-background bg-primary pl-3"),
+            P('LLM experiment toolkit v0.3.5',cls="ml-auto text-background bg-primary pl-3"),
             Sl_tab_group()(
                 Sl_tab('Test', slot='nav', panel='test'),
                 Sl_tab('Dataset', slot='nav', panel='dataset'),
                 Sl_tab('Train', slot='nav', panel='train'),
-                Sl_tab('list', slot='nav', panel='list'),
-                Sl_tab('Microscope', slot='nav', panel='microscope'),
+                Sl_tab('Heatmaps', slot='nav', panel='heatmaps'),
                 Sl_tab_panel(CalculatorView(rt), name='test'),
                 Sl_tab_panel(DatasetView(rt), name='dataset'),
                 Sl_tab_panel(TrainView(rt), name='train'),
-                Sl_tab_panel(tasks_homepage, name='list'),
-                Sl_tab_panel(WeightHeatmap(rt), name='microscope'),
+                Sl_tab_panel(WeightHeatmap(rt), name='heatmaps'),
             ),
         )
 
@@ -130,7 +130,7 @@ def call_generate_dataset(to_omit_list=None) -> None:
     
 def call_test(prompt_text: str) -> dict:
     # calculate by algorithm
-    manual_res = manual_test(prompt_text)
+    manual_res = prompt_to_completion(prompt_text)
     debug(manual_res)
     
     # calculate by gpt2
