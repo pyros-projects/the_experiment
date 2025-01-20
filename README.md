@@ -178,7 +178,7 @@ the-experiment --test '1,0,1,0,1'
 Marvel at this shit, and shove it up the luddites and their parrots.
 Even removing three different sequences are no problem. Feel free to push it to the limit.
 
-if you have a trained RNN oder CNN, the output will include those
+if you have a trained RNN or CNN, the output will include those
 
 ![alt text](.img/rnn.png)
 
