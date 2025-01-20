@@ -2,7 +2,7 @@ import torch
 from the_experiment.comparison.load_model import load_model , load_rnn, load_models
 from the_experiment.dataset import bool2int
 from typing import List, Dict, Optional, Tuple
-
+from devtools import debug
 class ModelEvaluator:
     def __init__(self):
         self.model, self.rnn_model, self.cnn_model, self.tokenizer = load_models()
@@ -28,6 +28,28 @@ def eval_model(prompt_text: str) -> str:
         output = model_evaluator.tokenizer.decode(output[0])
         return str(output)
     except Exception as e:
+        return None
+
+def eval_cnn(prompt_text: str) -> str:
+    try:
+        model = model_evaluator.cnn_model
+        with torch.no_grad():
+            # Tokenize input
+            inputs = model_evaluator.tokenizer(prompt_text, return_tensors="pt")
+            input_ids = inputs["input_ids"].to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+
+
+            logits = model(input_ids)
+            
+            # Get next token predictions for each position
+            predicted_tokens = torch.argmax(logits[0], dim=-1)
+            
+            # Decode the predicted sequence and clean it up
+            predicted_text = model_evaluator.tokenizer.decode(predicted_tokens)
+
+            return predicted_text
+    except Exception as e:
+        debug(e)
         return None
 
 def eval_rnn(prompt_text: str) -> str:
@@ -79,7 +101,8 @@ def eval_rnn(prompt_text: str) -> str:
             return output_text
     except Exception as e:
         return None
-    
+
+eval_cnn("1,0,0,1,0")
 
 def eval_model_bool(a,b,c,d,e) -> str:
     a = str(bool2int(a))
@@ -89,6 +112,24 @@ def eval_model_bool(a,b,c,d,e) -> str:
     e = str(bool2int(e))
     prompt = (f"{a},{b},{c},{d},{e}")
     return eval_model(prompt)
+
+def eval_rnn_bool(a,b,c,d,e) -> str:
+    a = str(bool2int(a))
+    b = str(bool2int(b))
+    c = str(bool2int(c))
+    d = str(bool2int(d))
+    e = str(bool2int(e))
+    prompt = (f"{a},{b},{c},{d},{e}")
+    return eval_rnn(prompt)
+
+def eval_cnn_bool(a,b,c,d,e) -> str:
+    a = str(bool2int(a))
+    b = str(bool2int(b))
+    c = str(bool2int(c))
+    d = str(bool2int(d))
+    e = str(bool2int(e))
+    prompt = (f"{a},{b},{c},{d},{e}")
+    return eval_cnn(prompt)
 
 def eval_model_int(a,b,c,d,e) -> str:
     a = str(a)

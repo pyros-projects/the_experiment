@@ -119,7 +119,7 @@ def validate_model(
     finally:
         model.train()
 
-def training_rnn():
+def training_rnn(folder):
     """
     Main training function for the RNN language model.
     """
@@ -127,7 +127,7 @@ def training_rnn():
         # Setup
         start_time = time.time()
         device = setup_training_environment()
-        out_dir = Path("out")
+        out_dir = Path(f"out/{folder}")
         out_dir.mkdir(exist_ok=True)
         
         # Initialize tokenizer

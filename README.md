@@ -195,7 +195,7 @@ the-experiment --testui
 
 If you are more the clicking type, this is for you
 
-![alt text](.img/testui.png)
+![alt text](.img/rnn_ui.png)
 
 
 

@@ -140,10 +140,10 @@ def setup_training_environment(output_dir: str) -> None:
     else:
         logger.warning("No GPU available, using CPU")
 
-def training():
+def training(folder):
     try:
         # Setup training environment
-        output_dir = "./out/tiny-gpt2-causal"
+        output_dir = f"./out/{folder}/tiny-gpt2-causal"
         setup_training_environment(output_dir)
         
         # 1. Load data

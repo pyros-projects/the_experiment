@@ -1,13 +1,11 @@
 from dataclasses import dataclass
 from fasthtml.common import *
+from monsterui.all import *
+from fasthtml.components import Sl_card,Sl_tab,Sl_tab_panel,Sl_checkbox, Sl_button
+from the_experiment.components.calculator_components import InputGrid, OutputGrid, ModelOutputGrid,RnnOutputGrid
+from the_experiment.rules.rules import RULES
 
-from the_experiment.components.calculator_components import InputGrid, OutputGrid, ModelOutputGrid
 
-RULES="""new_A = A XOR C
-new_B = NOT D  
-new_C = B AND E
-new_D = A OR new_B
-"""
 
 
 @dataclass 
@@ -35,29 +33,26 @@ def render_state(state: BooleanState):
     new_A, new_B, new_C, new_D, old_sum, new_sum = calculate_new_state(state)
     
     app = Main(
+       
         # Input state
-        Div(cls="grid grid-cols-2 gap-0 w-[1000px]")(Div(
-            H2("Input State", cls="text-xl font-bold mb-4"),
-            InputGrid(state.A, state.B, state.C, state.D, state.E),
+        Div(cls="grid grid-cols-3 gap-4 w-[1200px]")(
+            Div(),
+            Sl_card(Div(Strong("Input Sequence"),slot="header"),Div(
+                #H2("Input State", cls="text-xl font-bold mb-4"),
+                InputGrid(state.A, state.B, state.C, state.D, state.E),
+                Div(f"Input Sum: {old_sum}", cls="mt-4 font-bold"),
+                cls="space-y-4 justify-items-center"
+            ),cls="w-[400px]"),
+            Div(),
+            Sl_card(Div(Strong("Fact // Transformation Rules"),slot="header"),Div(
+                Pre(RULES, cls="bg-gray-100 p-4 rounded-lg  w-[100%]"),
+                OutputGrid(new_A,new_B,new_C,new_D),    
+                Div(f"Output Sum: {new_sum}", cls="mt-4 font-bold"),
+                cls="mt-0 space-y-4 justify-items-center h-[275px]"
+            ),cls="w-[400px] "),
+            Sl_card(Div(Strong("Model Inference // LLM"),slot="header"),ModelOutputGrid(state.A, state.B, state.C, state.D, state.E),cls="w-[400px]"),
 
-            Div(f"Input Sum: {old_sum}", cls="mt-4 font-bold"),
-            cls="space-y-4 justify-items-center"
-        ),
-        Div(),
-        # Rules explanation
-        
-        Div(
-            H2("Transformation Rules", cls="text-xl font-bold mb-4"),
-            Pre(RULES, cls="bg-gray-100 p-4 rounded-lg  w-[70%]"),
-            H2("Output State", cls="text-xl font-bold mb-4"),
-            OutputGrid(new_A,new_B,new_C,new_D),    
-            Div(f"Output Sum: {new_sum}", cls="mt-4 font-bold"),
-            cls="mt-4 space-y-4 justify-items-center"
-        ),
-        ModelOutputGrid(state.A, state.B, state.C, state.D, state.E),
-        # Output state
-    
-        # Model output
+            Sl_card(Div(Strong("Model Inference // RNN"),slot="header"),RnnOutputGrid(state.A, state.B, state.C, state.D, state.E),cls="w-[400px]"),
         ),
         
         

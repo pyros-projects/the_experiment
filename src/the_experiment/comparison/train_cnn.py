@@ -126,7 +126,7 @@ def validate_model(
     finally:
         model.train()
 
-def training_cnn():
+def training_cnn(folder):
     """
     Main training function for the CNN language model.
     """
@@ -134,7 +134,7 @@ def training_cnn():
         # Setup
         start_time = time.time()
         device = setup_training_environment()
-        out_dir = Path("out")
+        out_dir = Path(f"out/{folder}")
         out_dir.mkdir(exist_ok=True)
         
         # Initialize tokenizer
@@ -148,17 +148,6 @@ def training_cnn():
         logger.info("Loading datasets")
         try:
             train_dataset = MiniworldTextDataset("dataset/train.jsonl", tokenizer)
-            total_size = len(train_dataset)
-            random_indices = random.sample(range(total_size), min(10, total_size))
-            
-            print(f"\nViewing {10} random entries:")
-            print("=" * 50)
-            
-            # Print each random entry
-            for idx in random_indices:
-                print(f"\nEntry {idx}:")
-                print(train_dataset.data[idx])
-                print("-" * 50)
             valid_dataset = MiniworldTextDataset("dataset/valid.jsonl", tokenizer)
             logger.info(f"Loaded {len(train_dataset)} training examples and {len(valid_dataset)} validation examples")
         except Exception as e:
