@@ -15,7 +15,7 @@ from monsterui.all import *
 from the_experiment.app.modules.shoelace_app import app as shoelace_app
 from the_experiment.app.modules.calculator_view import CalculatorView
 from the_experiment.app.modules.dataset_view import DatasetView
-from the_experiment.app.modules.heatmap import WeightHeatmap
+from the_experiment.app.modules.weight_view import WeightView
 from the_experiment.app.modules.train_view import TrainView
 from the_experiment.models.cnn.train_cnn import training_cnn
 from the_experiment.models.cnn2.train_cnn2 import training_cnn2
@@ -26,22 +26,6 @@ from the_experiment.models.model_eval import MODEL_EVALUATOR
 from the_experiment.models.rnn.train_rnn import training_rnn
 from the_experiment.rules.rules import prompt_to_completion
 
-# from the_experiment.comparison.train_mann import training_mann
-# from the_experiment.models.dataset import generate_dataset
-# from the_experiment.comparison.model_eval import ModelEvaluator
-# from the_experiment.modules.calculator_view import CalculatorView
-# from the_experiment.modules.dataset_view import DatasetView
-# from the_experiment.modules.heatmap import WeightHeatmap
-# from the_experiment.modules.train_view import TrainView
-# from the_experiment.rules.rules import prompt_to_completion
-# from the_experiment.comparison.model_eval import MODEL_EVALUATOR
-# from the_experiment.models.gpt2.train_small_causal_model import training
-# from the_experiment.comparison.train_rnn import training_rnn
-# from the_experiment.comparison.train_cnn import training_cnn
-# from the_experiment.comparison.train_cnn2 import training_cnn2
-# from the_experiment.modules.shoelace_app import app as shoelace_app
-# from the_experiment.components.dataset_list import tasks_homepage
-# from the_experiment.comparison.load_model import output_folders
 
 app, rt = shoelace_app
 
@@ -95,11 +79,11 @@ def get():
                 Sl_tab("Test", slot="nav", panel="test"),
                 Sl_tab("Dataset", slot="nav", panel="dataset"),
                 Sl_tab("Train", slot="nav", panel="train"),
-                Sl_tab("Heatmaps", slot="nav", panel="heatmaps"),
+                Sl_tab("Weights", slot="nav", panel="weights"),
                 Sl_tab_panel(CalculatorView(rt), name="test"),
                 Sl_tab_panel(DatasetView(rt), name="dataset"),
                 Sl_tab_panel(TrainView(rt), name="train"),
-                Sl_tab_panel(WeightHeatmap(rt), name="heatmaps"),
+                Sl_tab_panel(WeightView(rt), name="weights"),
             ),
         ),
     )
