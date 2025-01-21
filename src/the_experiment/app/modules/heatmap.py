@@ -5,7 +5,7 @@ import numpy as np
 import plotly.express as px
 import json
 
-from the_experiment.comparison.model_eval import MODEL_EVALUATOR
+from the_experiment.models.model_eval import MODEL_EVALUATOR
 
 
 

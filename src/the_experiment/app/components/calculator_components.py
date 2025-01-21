@@ -2,9 +2,9 @@
 from dataclasses import dataclass
 from fasthtml.common import *
 from devtools import debug
-from the_experiment.dataset import int2bool
-from the_experiment.comparison.model_eval import ModelEvaluator
-from the_experiment.comparison.model_eval import MODEL_EVALUATOR
+from the_experiment.models.dataset import int2bool
+from the_experiment.models.model_eval import ModelEvaluator
+from the_experiment.models.model_eval import MODEL_EVALUATOR
 
 
 def boolean_circle(value: bool, name: str, onclick: str,htmx_target="#main-content"):
@@ -59,7 +59,7 @@ def ModelOutputGrid(A,B,C,D,E,folder=MODEL_EVALUATOR.active_folder):
     cls = "justify-items-center"
     model_output = MODEL_EVALUATOR.eval_model_bool(A,B,C,D,E)
     
-    if model_output is None:
+    if model_output is None or model_output == "":
         return Div(
             H2("Model Output State", cls="text-xl font-bold mb-4"),
             Div("Error with loading model", cls="mt-4 font-bold"),
@@ -93,7 +93,7 @@ def RnnOutputGrid(A,B,C,D,E):
 
     model_output = MODEL_EVALUATOR.eval_rnn_bool(A,B,C,D,E)
     
-    if model_output is None:
+    if model_output is None or model_output == "":
         return Div(
             H2("Model Output State", cls="text-xl font-bold mb-4"),
             Div("Error with loading model", cls="mt-4 font-bold"),
@@ -127,7 +127,7 @@ def CnnOutputGrid(A,B,C,D,E):
 
     model_output = MODEL_EVALUATOR.eval_cnn_bool(A,B,C,D,E)
     
-    if model_output is None:
+    if model_output is None or model_output == "":
         return Div(
             H2("Model Output State", cls="text-xl font-bold mb-4"),
             Div("Error with loading model", cls="mt-4 font-bold"),

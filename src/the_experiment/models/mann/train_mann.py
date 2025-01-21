@@ -1,4 +1,4 @@
-# file: train_cnn.py
+# file: train_mann.py
 
 import torch
 import torch.nn as nn
@@ -12,8 +12,8 @@ from loguru import logger
 import time
 from tqdm import tqdm
 
-from the_experiment.comparison.load_data import MiniworldTextDataset
-from the_experiment.comparison.cnn2_lm import CNNLanguageModel
+from the_experiment.models.load_data import MiniworldTextDataset
+from the_experiment.models.mann.mann_lm import MANNLanguageModel
 
 # Configure loguru
 log_dir = Path("logs")
@@ -27,7 +27,7 @@ logger.add(
     level="INFO"
 )
 logger.add(
-    log_dir / "cnn_training_{time}.log",
+    log_dir / "mann_training_{time}.log",
     rotation="100 MB",
     retention="10 days",
     level="DEBUG"
@@ -60,12 +60,21 @@ def validate_model(
     model.eval()
     val_loss = 0.0
     num_batches = len(valid_loader)
+    hidden = None
     
     try:
         with torch.no_grad():
             for input_ids, attention_mask in tqdm(valid_loader, desc="Validation"):
                 input_ids = input_ids.to(device)
-                logits, _ = model(input_ids)
+                
+                # Forward pass
+                logits, hidden = model(input_ids, hidden)
+                
+                # Detach hidden state
+                if hidden is not None:
+                    hidden = tuple(h.detach() for h in hidden)
+                
+                # Calculate loss
                 shift_logits = logits[:, :-1, :].contiguous().view(-1, vocab_size)
                 shift_labels = input_ids[:, 1:].contiguous().view(-1)
                 loss = criterion(shift_logits, shift_labels)
@@ -81,8 +90,8 @@ def validate_model(
     finally:
         model.train()
 
-def training_cnn2(folder):
-    """Main training function for the CNN language model."""
+def training_mann(folder):
+    """Main training function for the Memory Augmented Neural Network."""
     try:
         # Setup
         start_time = time.time()
@@ -102,9 +111,10 @@ def training_cnn2(folder):
         valid_dataset = MiniworldTextDataset("dataset/valid.jsonl", tokenizer)
         
         # Create dataloaders
+        batch_size = 16  # Smaller batch size due to memory usage
         train_loader = DataLoader(
-            train_dataset, 
-            batch_size=32,  # Larger batch size for CNN
+            train_dataset,
+            batch_size=batch_size,
             shuffle=True,
             collate_fn=lambda b: (
                 torch.stack([x["input_ids"] for x in b]),
@@ -113,7 +123,7 @@ def training_cnn2(folder):
         )
         valid_loader = DataLoader(
             valid_dataset,
-            batch_size=32,
+            batch_size=batch_size,
             shuffle=False,
             collate_fn=lambda b: (
                 torch.stack([x["input_ids"] for x in b]),
@@ -123,19 +133,27 @@ def training_cnn2(folder):
 
         # Initialize model
         logger.info("Initializing model")
-        model = CNNLanguageModel(
+        model = MANNLanguageModel(
             vocab_size=vocab_size,
             embed_dim=128,
-            hidden_dim=128,
-            num_layers=3,
-            kernel_size=3,
-            dropout=0.1
+            hidden_dim=256,
+            memory_size=128,
+            memory_vector_dim=64,
+            num_layers=1
         )
         model.to(device)
+        model.init_weights()
         
         # Setup training
         criterion = nn.CrossEntropyLoss()
-        optimizer = optim.Adam(model.parameters(), lr=3e-4)
+        optimizer = optim.Adam(model.parameters(), lr=1e-3)
+        scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer,
+            mode='min',
+            factor=0.5,
+            patience=2,
+            verbose=True
+        )
         epochs = 3
         best_val_loss = float('inf')
         
@@ -144,19 +162,28 @@ def training_cnn2(folder):
         for epoch in range(epochs):
             model.train()
             total_loss = 0.0
+            hidden = None
             
             for batch_idx, (input_ids, attention_mask) in enumerate(tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}")):
                 try:
                     input_ids = input_ids.to(device)
-                    attention_mask = attention_mask.to(device)
-
-                    logits, _ = model(input_ids)
+                    
+                    # Forward pass
+                    logits, hidden = model(input_ids, hidden)
+                    
+                    # Detach hidden state
+                    if hidden is not None:
+                        hidden = tuple(h.detach() for h in hidden)
+                    
+                    # Calculate loss
                     shift_logits = logits[:, :-1, :].contiguous().view(-1, vocab_size)
                     shift_labels = input_ids[:, 1:].contiguous().view(-1)
-
                     loss = criterion(shift_logits, shift_labels)
+                    
+                    # Backward pass
                     optimizer.zero_grad()
                     loss.backward()
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                     optimizer.step()
 
                     total_loss += loss.item()
@@ -174,6 +201,7 @@ def training_cnn2(folder):
 
             # Validation
             val_loss = validate_model(model, valid_loader, criterion, device, vocab_size)
+            scheduler.step(val_loss)
             
             # Save best model
             if val_loss < best_val_loss:
@@ -183,10 +211,11 @@ def training_cnn2(folder):
                     'model_state_dict': model.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
                     'val_loss': val_loss,
-                }, f'{out_dir}/cnn2_lm_best.pt')
+                }, f'{out_dir}/mann_lm_best.pt')
+                logger.info(f"Saved best model with validation loss: {val_loss:.4f}")
 
         # Save final model
-        torch.save(model.state_dict(), f"{out_dir}/cnn2_lm_final.pt")
+        torch.save(model.state_dict(), f"{out_dir}/mann_lm_final.pt")
         
         # Training summary
         total_time = time.time() - start_time

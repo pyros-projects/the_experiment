@@ -5,22 +5,34 @@ from fasthtml.components import Sl_tab_group,Sl_tab,Sl_tab_panel,Sl_select,Sl_op
 from devtools import debug
 from monsterui.all import *
 
-from the_experiment.comparison.train_mann import training_mann
-from the_experiment.dataset import generate_dataset
-from the_experiment.comparison.model_eval import ModelEvaluator
-from the_experiment.modules.calculator_view import CalculatorView
-from the_experiment.modules.dataset_view import DatasetView
-from the_experiment.modules.heatmap import WeightHeatmap
-from the_experiment.modules.train_view import TrainView
-from the_experiment.rules.rules import prompt_to_completion
-from the_experiment.comparison.model_eval import MODEL_EVALUATOR
-from the_experiment.train_small_causal_model import training
-from the_experiment.comparison.train_rnn import training_rnn
-from the_experiment.comparison.train_cnn import training_cnn
-from the_experiment.comparison.train_cnn2 import training_cnn2
-from the_experiment.modules.shoelace_app import app as shoelace_app
-from the_experiment.components.dataset_list import tasks_homepage
-from the_experiment.comparison.load_model import output_folders
+from the_experiment.app.modules.shoelace_app import app as shoelace_app
+from the_experiment.app.modules.calculator_view import CalculatorView
+from the_experiment.app.modules.dataset_view import DatasetView
+from the_experiment.app.modules.heatmap import WeightHeatmap
+from the_experiment.app.modules.train_view import TrainView
+from the_experiment.models.cnn.train_cnn import training_cnn
+from the_experiment.models.cnn2.train_cnn2 import training_cnn2
+from the_experiment.models.gpt2.train_small_causal_model import training
+from the_experiment.models.mann.train_mann import training_mann
+from the_experiment.models.model_eval import MODEL_EVALUATOR
+from the_experiment.models.rnn.train_rnn import training_rnn
+
+# from the_experiment.comparison.train_mann import training_mann
+# from the_experiment.models.dataset import generate_dataset
+# from the_experiment.comparison.model_eval import ModelEvaluator
+# from the_experiment.modules.calculator_view import CalculatorView
+# from the_experiment.modules.dataset_view import DatasetView
+# from the_experiment.modules.heatmap import WeightHeatmap
+# from the_experiment.modules.train_view import TrainView
+# from the_experiment.rules.rules import prompt_to_completion
+# from the_experiment.comparison.model_eval import MODEL_EVALUATOR
+# from the_experiment.models.gpt2.train_small_causal_model import training
+# from the_experiment.comparison.train_rnn import training_rnn
+# from the_experiment.comparison.train_cnn import training_cnn
+# from the_experiment.comparison.train_cnn2 import training_cnn2
+# from the_experiment.modules.shoelace_app import app as shoelace_app
+# from the_experiment.components.dataset_list import tasks_homepage
+# from the_experiment.comparison.load_model import output_folders
 
 app, rt = shoelace_app
 
@@ -65,7 +77,7 @@ def get():
     
 @rt("/icon/{icon}")
 def get(icon:str):
-    with open(f"src/the_experiment/assets/{icon}.svg") as f:
+    with open(f"src/the_experiment/app/assets/{icon}.svg") as f:
         return f.read()
 
 

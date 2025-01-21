@@ -3,8 +3,8 @@ import os
 from pathlib import Path
 import torch
 from transformers import GPT2LMHeadModel, GPT2TokenizerFast
-from the_experiment.comparison.rnn_lm import LSTMLanguageModel  
-from the_experiment.comparison.cnn_lm import CNNLanguageModel
+from the_experiment.models.rnn.rnn_lm import LSTMLanguageModel  
+from the_experiment.models.cnn.cnn_lm import CNNLanguageModel
 from datetime import datetime
 
 DEFAULT_LLM = "tiny-gpt2-causal/final"

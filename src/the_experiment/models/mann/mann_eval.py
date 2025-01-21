@@ -7,7 +7,9 @@ from pathlib import Path
 import numpy as np
 from loguru import logger
 
-from the_experiment.comparison.mann_lm import MANNLanguageModel
+from the_experiment.models.mann.mann_lm import MANNLanguageModel
+
+
 
 class MANNPredictor:
     def __init__(

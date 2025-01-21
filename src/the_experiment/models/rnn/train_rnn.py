@@ -1,4 +1,4 @@
-# file: train_mann.py
+# file: train_rnn.py
 
 import torch
 import torch.nn as nn
@@ -12,14 +12,17 @@ from loguru import logger
 import time
 from tqdm import tqdm
 
-from the_experiment.comparison.load_data import MiniworldTextDataset
-from the_experiment.comparison.mann_lm import MANNLanguageModel
+from the_experiment.models.load_data import MiniworldTextDataset
+from the_experiment.models.rnn.rnn_lm import LSTMLanguageModel
+
+
 
 # Configure loguru
+# Create logs directory if it doesn't exist
 log_dir = Path("logs")
 log_dir.mkdir(exist_ok=True,parents=True)
 
-logger.remove()
+logger.remove()  # Remove default handler
 logger.add(
     sys.stdout,
     colorize=True,
@@ -27,16 +30,22 @@ logger.add(
     level="INFO"
 )
 logger.add(
-    log_dir / "mann_training_{time}.log",
+    log_dir / "rnn_training_{time}.log",
     rotation="100 MB",
     retention="10 days",
     level="DEBUG"
 )
 
 def setup_training_environment() -> torch.device:
-    """Set up the training environment and return the appropriate device."""
+    """
+    Set up the training environment and return the appropriate device.
+    
+    Returns:
+        torch.device: The device to be used for training
+    """
     logger.info("Setting up training environment")
     
+    # Check CUDA availability
     if torch.cuda.is_available():
         device = torch.device("cuda")
         logger.info(f"Using GPU: {torch.cuda.get_device_name(0)}")
@@ -48,6 +57,25 @@ def setup_training_environment() -> torch.device:
     
     return device
 
+def collate_fn(batch: List[Dict[str, torch.Tensor]]) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Collate function for DataLoader with error handling.
+    
+    Args:
+        batch: List of dictionaries containing input_ids and attention_mask
+        
+    Returns:
+        Tuple of input_ids and attention_mask tensors
+    """
+    try:
+        input_ids = torch.stack([item["input_ids"] for item in batch], dim=0)
+        attention_mask = torch.stack([item["attention_mask"] for item in batch], dim=0)
+        return input_ids, attention_mask
+    except Exception as e:
+        logger.error(f"Error in collate_fn: {str(e)}")
+        logger.debug(f"Batch contents: {batch}")
+        raise
+
 def validate_model(
     model: nn.Module,
     valid_loader: DataLoader,
@@ -55,26 +83,29 @@ def validate_model(
     device: torch.device,
     vocab_size: int
 ) -> float:
-    """Validate the model on the validation dataset."""
+    """
+    Validate the model on the validation dataset.
+    
+    Args:
+        model: The LSTM model
+        valid_loader: DataLoader for validation data
+        criterion: Loss function
+        device: Device to run validation on
+        vocab_size: Size of vocabulary
+        
+    Returns:
+        float: Average validation loss
+    """
     logger.info("Starting validation")
     model.eval()
     val_loss = 0.0
     num_batches = len(valid_loader)
-    hidden = None
     
     try:
         with torch.no_grad():
             for input_ids, attention_mask in tqdm(valid_loader, desc="Validation"):
                 input_ids = input_ids.to(device)
-                
-                # Forward pass
-                logits, hidden = model(input_ids, hidden)
-                
-                # Detach hidden state
-                if hidden is not None:
-                    hidden = tuple(h.detach() for h in hidden)
-                
-                # Calculate loss
+                logits, hidden = model(input_ids)
                 shift_logits = logits[:, :-1, :].contiguous().view(-1, vocab_size)
                 shift_labels = input_ids[:, 1:].contiguous().view(-1)
                 loss = criterion(shift_logits, shift_labels)
@@ -90,8 +121,10 @@ def validate_model(
     finally:
         model.train()
 
-def training_mann(folder):
-    """Main training function for the Memory Augmented Neural Network."""
+def training_rnn(folder, callback=None):
+    """
+    Main training function for the RNN language model.
+    """
     try:
         # Setup
         start_time = time.time()
@@ -104,119 +137,99 @@ def training_mann(folder):
         tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
         tokenizer.pad_token = tokenizer.eos_token
         vocab_size = tokenizer.vocab_size
-        
+        logger.debug(f"Vocabulary size: {vocab_size}")
+
         # Load datasets
         logger.info("Loading datasets")
-        train_dataset = MiniworldTextDataset("dataset/train.jsonl", tokenizer)
-        valid_dataset = MiniworldTextDataset("dataset/valid.jsonl", tokenizer)
-        
+        try:
+            train_dataset = MiniworldTextDataset("dataset/train.jsonl", tokenizer)
+            valid_dataset = MiniworldTextDataset("dataset/valid.jsonl", tokenizer)
+            logger.info(f"Loaded {len(train_dataset)} training examples and {len(valid_dataset)} validation examples")
+        except Exception as e:
+            logger.error(f"Error loading datasets: {str(e)}")
+            raise
+
         # Create dataloaders
-        batch_size = 16  # Smaller batch size due to memory usage
-        train_loader = DataLoader(
-            train_dataset,
-            batch_size=batch_size,
-            shuffle=True,
-            collate_fn=lambda b: (
-                torch.stack([x["input_ids"] for x in b]),
-                torch.stack([x["attention_mask"] for x in b])
-            )
-        )
-        valid_loader = DataLoader(
-            valid_dataset,
-            batch_size=batch_size,
-            shuffle=False,
-            collate_fn=lambda b: (
-                torch.stack([x["input_ids"] for x in b]),
-                torch.stack([x["attention_mask"] for x in b])
-            )
-        )
+        logger.info("Creating DataLoaders")
+        train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True, collate_fn=collate_fn)
+        valid_loader = DataLoader(valid_dataset, batch_size=16, shuffle=False, collate_fn=collate_fn)
+        logger.debug(f"Number of training batches: {len(train_loader)}")
+        logger.debug(f"Number of validation batches: {len(valid_loader)}")
 
         # Initialize model
         logger.info("Initializing model")
-        model = MANNLanguageModel(
-            vocab_size=vocab_size,
-            embed_dim=128,
-            hidden_dim=256,
-            memory_size=128,
-            memory_vector_dim=64,
-            num_layers=1
-        )
+        model = LSTMLanguageModel(vocab_size=vocab_size, embed_dim=128, hidden_dim=128, num_layers=2)
         model.to(device)
-        model.init_weights()
-        
+        logger.debug(f"Model parameters: {sum(p.numel() for p in model.parameters()):,}")
+
         # Setup training
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters(), lr=1e-3)
-        scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer,
-            mode='min',
-            factor=0.5,
-            patience=2,
-            verbose=True
-        )
         epochs = 3
         best_val_loss = float('inf')
         
         # Training loop
         logger.info("Starting training")
         for epoch in range(epochs):
-            model.train()
+            epoch_start_time = time.time()
             total_loss = 0.0
-            hidden = None
+            model.train()
             
+            # Training epoch
             for batch_idx, (input_ids, attention_mask) in enumerate(tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}")):
                 try:
                     input_ids = input_ids.to(device)
-                    
-                    # Forward pass
-                    logits, hidden = model(input_ids, hidden)
-                    
-                    # Detach hidden state
-                    if hidden is not None:
-                        hidden = tuple(h.detach() for h in hidden)
-                    
-                    # Calculate loss
+                    attention_mask = attention_mask.to(device)
+
+                    logits, hidden = model(input_ids)
                     shift_logits = logits[:, :-1, :].contiguous().view(-1, vocab_size)
                     shift_labels = input_ids[:, 1:].contiguous().view(-1)
+
                     loss = criterion(shift_logits, shift_labels)
-                    
-                    # Backward pass
                     optimizer.zero_grad()
                     loss.backward()
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                     optimizer.step()
 
                     total_loss += loss.item()
 
                     if batch_idx % 100 == 0:
-                        logger.debug(f"Batch {batch_idx}, Loss: {loss.item():.4f}")
+                        logger.debug(f"Epoch {epoch+1}, Batch {batch_idx}/{len(train_loader)}, Loss: {loss.item():.4f}")
                 
                 except Exception as e:
-                    logger.error(f"Error in batch {batch_idx}: {str(e)}")
+                    logger.error(f"Error in training batch {batch_idx}: {str(e)}")
                     continue
 
             # Epoch statistics
             avg_loss = total_loss / len(train_loader)
-            logger.info(f"Epoch {epoch+1} - Average Loss: {avg_loss:.4f}")
+            epoch_time = time.time() - epoch_start_time
+            logger.info(f"Epoch {epoch+1}/{epochs} complete:")
+            logger.info(f"Average Loss: {avg_loss:.4f}")
+            logger.info(f"Epoch Time: {epoch_time:.2f}s")
 
             # Validation
             val_loss = validate_model(model, valid_loader, criterion, device, vocab_size)
-            scheduler.step(val_loss)
             
             # Save best model
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
+                logger.info("New best validation loss! Saving model checkpoint...")
                 torch.save({
                     'epoch': epoch,
                     'model_state_dict': model.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
+                    'train_loss': avg_loss,
                     'val_loss': val_loss,
-                }, f'{out_dir}/mann_lm_best.pt')
-                logger.info(f"Saved best model with validation loss: {val_loss:.4f}")
+                }, f'./{out_dir}/rnn_lm_best.pt')
 
         # Save final model
-        torch.save(model.state_dict(), f"{out_dir}/mann_lm_final.pt")
-        
+        logger.info("Saving final model")
+        try:
+            torch.save(model.state_dict(), f"./{out_dir}/rnn_lm_final.pt")
+            logger.success("Model saved successfully")
+        except Exception as e:
+            logger.error(f"Error saving model: {str(e)}")
+            raise
+
         # Training summary
         total_time = time.time() - start_time
         logger.success(f"Training completed in {total_time:.2f}s")
@@ -225,3 +238,4 @@ def training_mann(folder):
     except Exception as e:
         logger.exception(f"Training failed with error: {str(e)}")
         raise
+

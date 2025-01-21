@@ -2,9 +2,9 @@ from dataclasses import dataclass
 from fasthtml.common import *
 from fasthtml.components import Sl_tab_group,Sl_tab,Sl_tab_panel,Sl_checkbox, Sl_button,Sl_card,Sl_menu,Sl_menu_item,Sl_divider,Sl_split_panel
 from monsterui.all import *
-from the_experiment.components.calculator_components import InputGrid
-from the_experiment.modules.calculator_view import BooleanState, calculate_new_state
-from the_experiment.components.dataset_list import tasks_homepage
+from the_experiment.app.components.calculator_components import InputGrid
+from the_experiment.app.modules.calculator_view import BooleanState, calculate_new_state
+from the_experiment.app.components.dataset_list import tasks_homepage
 
 
 

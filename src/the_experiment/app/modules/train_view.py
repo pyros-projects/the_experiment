@@ -2,16 +2,18 @@ from dataclasses import dataclass
 from fasthtml.common import *
 from fasthtml.components import Sl_tab_group, Sl_tab, Sl_checkbox, Sl_button, Sl_split_panel, Sl_input
 from monsterui import *
-from the_experiment.comparison.load_model import check_out_folder
-from the_experiment.comparison.model_eval import ModelEvaluator, MODEL_EVALUATOR
-from the_experiment.train_small_causal_model import training
-from the_experiment.comparison.train_rnn import training_rnn
-from the_experiment.comparison.train_cnn import training_cnn
-from the_experiment.components.training_monitor import monitor, training_stats_component
+
+from the_experiment.models.cnn.train_cnn import training_cnn
+from the_experiment.models.gpt2.train_small_causal_model import training
+
+from the_experiment.app.components.training_monitor import monitor, training_stats_component
 from transformers import TrainerCallback
 from devtools import debug
 import asyncio
 from starlette.background import BackgroundTasks
+
+from the_experiment.models.model_eval import MODEL_EVALUATOR
+from the_experiment.models.rnn.train_rnn import training_rnn
 
 @dataclass
 class TrainState:

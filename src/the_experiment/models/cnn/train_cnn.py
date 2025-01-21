@@ -13,8 +13,8 @@ from loguru import logger
 import time
 from tqdm import tqdm
 
-from the_experiment.comparison.load_data import MiniworldTextDataset
-from the_experiment.comparison.cnn_lm import CNNLanguageModel
+from the_experiment.models.load_data import MiniworldTextDataset
+from the_experiment.models.cnn.cnn_lm import CNNLanguageModel
 
 # Create logs directory if it doesn't exist
 log_dir = Path("logs")
@@ -126,7 +126,7 @@ def validate_model(
     finally:
         model.train()
 
-def training_cnn(folder):
+def training_cnn(folder, callback=None):
     """
     Main training function for the CNN language model.
     """

@@ -1,8 +1,10 @@
 import torch
-from the_experiment.comparison.load_model import FolderContents, check_out_folder, load_model , load_rnn, load_models
-from the_experiment.dataset import bool2int
+
+from the_experiment.models.dataset import bool2int
 from typing import List, Dict, Optional, Tuple
 from devtools import debug
+
+from the_experiment.models.load_model import check_out_folder, load_models
 
 class ModelEvaluator:
     def __init__(self):
@@ -75,8 +77,10 @@ class ModelEvaluator:
 
     def eval_rnn(self,prompt_text: str) -> str:
         try:
-            if self.rnn_model is None:
-                return None
+            if self.rnn_model is None or prompt_text == "":
+                return ""
+            if self.tokenizer is None:
+                return ""
             model = self.rnn_model
             with torch.no_grad():
                 # Tokenize input

@@ -2,11 +2,9 @@ from dataclasses import dataclass
 from fasthtml.common import *
 from monsterui.all import *
 from fasthtml.components import Sl_card,Sl_tab,Sl_tab_panel,Sl_checkbox, Sl_button
-from the_experiment.components.calculator_components import CnnOutputGrid, InputGrid, OutputGrid, ModelOutputGrid,RnnOutputGrid
+from the_experiment.app.components.calculator_components import CnnOutputGrid, InputGrid, OutputGrid, ModelOutputGrid,RnnOutputGrid
 from the_experiment.rules.rules import RULES
-from the_experiment.comparison.model_eval import MODEL_EVALUATOR
-
-
+from the_experiment.models.model_eval import MODEL_EVALUATOR
 
 
 @dataclass 
@@ -70,8 +68,7 @@ def render_state(state: BooleanState):
 def CalculatorView(rt):
     @rt("/")
     def get():
-        return Titled("Boolean Logic Transformer", 
-                    render_state(state))
+        return render_state(state)
 
     @rt("/toggle/{var}")
     def post(var: str):

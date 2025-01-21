@@ -15,7 +15,7 @@ import sys
 from typing import List, Dict, Any
 from pathlib import Path
 
-from the_experiment.utils.callbacks import ProgressCallback
+
 
 
 # Configure loguru
@@ -235,9 +235,6 @@ def training(folder, callback=None):
             eval_dataset=valid_dataset,
             callbacks=callbacks
         )
-        
-        if not any(isinstance(cb, ProgressCallback) for cb in trainer.callback_handler.callbacks):
-            trainer.add_callback(ProgressCallback())
             
             
         th = threading.Thread(target=training_llm_in_background, args=(trainer,valid_dataset,output_dir,tokenizer), daemon=True)
