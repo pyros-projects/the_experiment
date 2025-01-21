@@ -1,307 +1,190 @@
-"""FrankenUI Tasks Example"""
-
 from fasthtml.common import *
 from monsterui.all import *
-from fasthtml.svg import *
+from typing import List
 import json
 
-
-def NavP(*c, cls=TextFont.muted_sm):
-    return P(cls=cls)(*c)
+from the_experiment.app.modules.rules_playground import BooleanState
 
 
-def LAlignedTxtIcon(
-    txt,
-    icon,
-    width=None,
-    height=None,
-    stroke_width=None,
-    cls="space-x-2",
-    icon_right=True,
-    txt_cls=None,
-):
-    c = (
-        txt
-        if isinstance(txt, FT)
-        else NavP(txt, cls=ifnone(txt_cls, TextFont.muted_sm)),
-        UkIcon(icon=icon, height=height, width=width, stroke_width=stroke_width),
-    )
-    if not icon_right:
-        c = reversed(c)
-    return DivLAligned(*c, cls=cls)
+    
 
-
-def LAlignedIconTxt(
-    txt, icon, width=None, height=None, stroke_width=None, cls="space-x-2", txt_cls=None
-):
-    # Good for navbars
-    return LAlignedTxtIcon(
-        txt=txt,
-        icon=icon,
-        width=width,
-        stroke_width=stroke_width,
-        cls=cls,
-        icon_right=False,
-        txt_cls=txt_cls,
-    )
-
-
-def SpacedPP(left, right=None):
-    return DivFullySpaced(NavP(left), NavP(right) if right else "")
-
-
-def SpacedPPs(*c):
-    return [SpacedPP(*tuplify(o)) for o in c]
-
-
-with open("data/status_list.json", "r") as f:
-    data = json.load(f)
-with open("data/statuses.json", "r") as f:
-    statuses = json.load(f)
-
-
-def _create_tbl_data(d):
+    
+def load_datasets(page=1, per_page=10, search=None):
+    # Simulated dataset loading with pagination and search
+    with open("./dataset/train.jsonl", "r") as f:
+        data = [json.loads(line) for line in f]
+    
+    # Apply search if provided
+    if search:
+        data = [d for d in data if search in d["prompt"] or search in d["completion"]]
+    
+    # Calculate pagination
+    total = len(data)
+    start_idx = (page - 1) * per_page
+    end_idx = start_idx + per_page
+    
     return {
-        "Done": d["selected"],
-        "Task": d["id"],
-        "Title": d["title"],
-        "Status": d["status"],
-        "Priority": d["priority"],
+        "data": data[start_idx:end_idx],
+        "total": total,
+        "pages": (total + per_page - 1) // per_page
     }
+    
+def split_data(value, delimiter=","):
+    """Split a string into columns based on delimiter"""
+    return [v.strip() for v in value.split(delimiter)]
 
-
-data = [_create_tbl_data(d) for d in data]
-
-priority_dd = [
-    {"priority": "low", "count": 36},
-    {"priority": "medium", "count": 33},
-    {"priority": "high", "count": 31},
-]
-
-rows_per_page_dd = [10, 20, 30, 40, 50]
-
-status_dd = [
-    {"status": "backlog", "count": 21},
-    {"status": "todo", "count": 21},
-    {"status": "progress", "count": 20},
-    {"status": "done", "count": 19},
-    {"status": "cancelled", "count": 19},
-]
-
-
-def create_hotkey_li(hotkey):
-    return NavCloseLi(
-        A(cls="justify-between")(hotkey[0], Span(hotkey[1], cls=TextFont.muted_sm))
-    )
-
-
-hotkeys_a = (
-    ("Profile", "⇧⌘P"),
-    ("Billing", "⌘B"),
-    ("Settings", "⌘S"),
-    ("New Team", ""),
-)
-hotkeys_b = (("Logout", ""),)
-
-avatar_opts = DropDownNavContainer(
-    NavHeaderLi(P("sveltecult"), NavSubtitle("leader@sveltecult.com")),
-    NavDividerLi(),
-    *map(create_hotkey_li, hotkeys_a),
-    NavDividerLi(),
-    *map(create_hotkey_li, hotkeys_b),
-)
-
-
-def CreateTaskModal():
-    return Modal(
-        Div(cls="p-6")(
-            ModalTitle("Create Task"),
-            P(
-                "Fill out the information below to create a new task",
-                cls=TextFont.muted_sm,
-            ),
-            Br(),
-            Form(cls="space-y-6")(
-                Grid(
-                    Div(
-                        Select(
-                            *map(Option, ("Documentation", "Bug", "Feature")),
-                            label="Task Type",
-                            id="task_type",
-                        )
-                    ),
-                    Div(
-                        Select(
-                            *map(
-                                Option,
-                                ("In Progress", "Backlog", "Todo", "Cancelled", "Done"),
-                            ),
-                            label="Status",
-                            id="task_status",
-                        )
-                    ),
-                    Div(
-                        Select(
-                            *map(Option, ("Low", "Medium", "High")),
-                            label="Priority",
-                            id="task_priority",
-                        )
-                    ),
-                ),
-                TextArea(
-                    label="Title",
-                    placeholder="Please describe the task that needs to be completed",
-                ),
-                DivRAligned(
-                    ModalCloseButton("Cancel", cls=ButtonT.ghost),
-                    ModalCloseButton("Submit", cls=ButtonT.primary),
-                    cls="space-x-5",
-                ),
-            ),
+def header_render(col, delimiter=None, subcolumns=None):
+    # Default simple header when no delimiter
+    if not delimiter:
+        return Th(col, cls="p-2")
+    
+    # Only create sub-headers if delimiter is specified
+    return Th(
+        Table(cls="w-full")(
+            Tr(Th(col, cls="text-center", colspan=len(subcolumns))),
+            Tr(*[Th(f"Col {i+1}", cls="text-center px-2 text-xs") 
+                for i in range(len(subcolumns))])
         ),
-        id="TaskForm",
+        cls="p-2"
     )
 
-
-page_heading = DivFullySpaced(cls="space-y-2")(
-    Div(cls="space-y-2")(
-        H2("Welcome back!"),
-        P("Here's a list of your tasks for this month!", cls=TextFont.muted_sm),
-    ),
-    Div(DiceBearAvatar("sveltcult", 8, 8), avatar_opts),
-)
-
-table_controls = (
-    Input(cls="w-[250px]", placeholder="Filter task"),
-    Button("Status"),
-    DropDownNavContainer(
-        map(
-            NavCloseLi,
-            [
-                A(DivFullySpaced(P(a["status"]), P(a["count"])), cls=TextT.capitalize)
-                for a in status_dd
-            ],
+def cell_render(col, val, delimiter=None):
+    # Default simple cell when no delimiter
+    if not delimiter:
+        return Td(cls="p-2")(
+            Pre(val, cls="whitespace-pre-wrap font-mono text-sm")
         )
-    ),
-    Button("Priority"),
-    DropDownNavContainer(
-        map(
-            NavCloseLi,
-            [
-                A(
-                    DivFullySpaced(
-                        LAlignedIconTxt(a["priority"], icon="check"), a["count"]
-                    ),
-                    cls=TextT.capitalize,
+    
+    # Only split into sub-columns if delimiter is specified
+    values = split_data(val, delimiter)
+    return Td(cls="p-2")(
+        Table(cls="w-full")(
+            Tr(*[Td(v, cls="text-center px-2 font-mono text-sm") for v in values])
+        )
+    )
+    
+def create_dataset_table(rt):
+    @rt("/datasets")
+    def get(page: int = 1, per_page: int = 10, search: str = None, 
+           prompt_delimiter: str = "", completion_delimiter: str = ""):
+        result = load_datasets(page, per_page, search)
+        
+        # Only calculate subcolumns if delimiters are set
+        prompt_cols = None
+        completion_cols = None
+        if prompt_delimiter:
+            prompt_cols = len(split_data(result["data"][0]["prompt"], prompt_delimiter))
+        if completion_delimiter:
+            completion_cols = len(split_data(result["data"][0]["completion"].strip(), completion_delimiter))
+
+        table_controls = DivFullySpaced(cls="mt-8")(
+            Div(cls="flex flex-1 gap-4")(
+                Input(
+                    cls="w-[250px]", 
+                    placeholder="Search datasets",
+                    name="search",
+                    value=search,
+                    hx_get="/datasets",
+                    hx_trigger="keyup changed delay:500ms",
+                    hx_target="#dataset-content",
+                    hx_include="[name='prompt_delimiter'],[name='completion_delimiter'],[name='per_page']"
+                ),
+                Input(
+                    cls="w-[80px]",
+                    placeholder="Prompt split",
+                    name="prompt_delimiter",
+                    value=prompt_delimiter,
+                    hx_get="/datasets",
+                    hx_trigger="keyup changed delay:300ms",
+                    hx_target="#dataset-content",
+                    hx_include="[name='search'],[name='completion_delimiter'],[name='per_page']"
+                ),
+                Input(
+                    cls="w-[80px]",
+                    placeholder="Completion split", 
+                    name="completion_delimiter",
+                    value=completion_delimiter,
+                    hx_get="/datasets",
+                    hx_trigger="keyup changed delay:300ms",
+                    hx_target="#dataset-content",
+                    hx_include="[name='search'],[name='prompt_delimiter'],[name='per_page']"
+                ),
+                Select(
+                    *[Option(str(n)) for n in [10, 20, 50, 100]],
+                    name="per_page",
+                    value=str(per_page),
+                    hx_get="/datasets",
+                    hx_trigger="change",
+                    hx_target="#dataset-content",
+                    hx_include="[name='search'],[name='prompt_delimiter'],[name='completion_delimiter']",
+                    cls="w-[100px]"
                 )
-                for a in priority_dd
-            ],
-        )
-    ),
-    Button("View"),
-    DropDownNavContainer(
-        map(
-            NavCloseLi,
-            [
-                A(LAlignedIconTxt(o, icon="check"))
-                for o in ["Title", "Status", "Priority"]
-            ],
-        )
-    ),
-    Button(
-        "Create Task",
-        cls=(ButtonT.primary, TextFont.bold_sm),
-        uk_toggle="target: #TaskForm",
-    ),
-)
-
-
-def task_dropdown():
-    return Div(
-        Button(UkIcon("ellipsis")),
-        DropDownNavContainer(
-            map(
-                NavCloseLi,
-                [
-                    A(
-                        "Edit",
-                    ),
-                    A("Make a copy"),
-                    A(
-                        "Favorite",
-                    ),
-                    A(SpacedPP("Delete", "⌘⌫")),
-                ],
             )
-        ),
-    )
+        )
 
-
-def header_render(col):
-    cls = "p-2 " + "uk-table-shrink" if col in ("Done", "Actions") else ""
-    match col:
-        case "Done":
-            return Th(CheckboxX(), cls=cls)
-        case "Actions":
-            return Th("", cls=cls)
-        case _:
-            return Th(col, cls=cls)
-
-
-def cell_render(col, val):
-    def _Td(*args, cls="", **kwargs):
-        return Td(*args, cls=f"p-2 {cls}", **kwargs)
-
-    match col:
-        case "Done":
-            return _Td(shrink=True)(CheckboxX(selected=val))
-        case "Task":
-            return _Td(val)
-        case "Title":
-            return _Td(cls="max-w-[500px] truncate", expand=True)(
-                val, cls="font-medium"
+        dataset_table = Div(cls="overflow-auto mt-4 rounded-md border border-border")(
+            TableFromDicts(
+                header_data=["Prompt", "Completion"],
+                body_data=[{
+                    "Prompt": d["prompt"], 
+                    "Completion": d["completion"].strip()
+                } for d in result["data"]],
+                body_cell_render=lambda col, val: cell_render(
+                    col, val, 
+                    delimiter=(prompt_delimiter if col == "Prompt" else completion_delimiter)
+                ),
+                header_cell_render=lambda col: header_render(
+                    col,
+                    delimiter=(prompt_delimiter if col == "Prompt" else completion_delimiter),
+                    subcolumns=[f"Col {i+1}" for i in range(
+                        prompt_cols if col == "Prompt" else completion_cols
+                    )] if (prompt_delimiter if col == "Prompt" else completion_delimiter) else None
+                ),
+                sortable=False
             )
-        case "Status" | "Priority":
-            return _Td(cls="uk-text-nowrap uk-text-capitalize")(Span(val))
-        case "Actions":
-            return _Td(cls="uk-table-shrink")(task_dropdown())
-        case _:
-            raise ValueError(f"Unknown column: {col}")
+        )
 
 
-task_columns = ["Done", "Task", "Title", "Status", "Priority", "Actions"]
 
-tasks_table = Div(cls="uk-overflow-auto mt-4 rounded-md border border-border")(
-    TableFromDicts(
-        header_data=task_columns,
-        body_data=data,
-        body_cell_render=cell_render,
-        header_cell_render=header_render,
-        sortable=True,
+
+        footer = DivFullySpaced(cls="mt-4 px-2 py-2")(
+            Div(f"Showing {(page-1)*per_page + 1} to {min(page*per_page, result['total'])} of {result['total']} entries", 
+                cls="flex-1 text-sm text-muted-foreground"),
+            Div(cls="flex flex-none items-center space-x-8")(
+                DivCentered(f"Page {page} of {result['pages']}", 
+                           cls="w-[100px] text-sm font-medium"),
+                DivLAligned(
+                    Button("<<", 
+                          hx_get=f"/datasets?page=1&per_page={per_page}", 
+                          hx_target="#dataset-content",
+                          disabled=page==1),
+                    Button("<", 
+                          hx_get=f"/datasets?page={page-1}&per_page={per_page}", 
+                          hx_target="#dataset-content",
+                          disabled=page==1),
+                    Button(">", 
+                          hx_get=f"/datasets?page={page+1}&per_page={per_page}", 
+                          hx_target="#dataset-content",
+                          disabled=page==result['pages']),
+                    Button(">>", 
+                          hx_get=f"/datasets?page={result['pages']}&per_page={per_page}", 
+                          hx_target="#dataset-content",
+                          disabled=page==result['pages'])
+                )
+            )
+        )
+
+        return Div(id="dataset-content")(
+            table_controls,
+            dataset_table,
+            footer
+        )
+
+    return Div(cls="p-8")(
+        H2("Dataset Explorer"),
+        P("Browse and search through the training datasets", 
+          cls=TextFont.muted_sm),
+        Div(id="dataset-content", 
+            hx_get="/datasets",
+            hx_trigger="load")
     )
-)
-
-
-def footer():
-    hw_cls = "h-4 w-4"
-    return DivFullySpaced(cls="mt-4 px-2 py-2")(
-        Div("1 of 100 row(s) selected.", cls="flex-1 text-sm text-muted-foreground"),
-        Div(cls="flex flex-none items-center space-x-8")(
-            DivCentered("Page 1 of 10", cls="w-[100px] text-sm font-medium"),
-            DivLAligned(
-                UkIconLink(icon="chevrons-left", button=True),
-                UkIconLink(icon="chevron-left", button=True),
-                UkIconLink(icon="chevron-right", button=True),
-                UkIconLink(icon="chevrons-right", button=True),
-            ),
-        ),
-    )
-
-
-tasks_ui = Div(
-    DivFullySpaced(cls="mt-8")(Div(cls="flex flex-1 gap-4")(table_controls)),
-    tasks_table,
-    footer(),
-)
-
-tasks_homepage = Div(cls="p-8")(page_heading, tasks_ui, CreateTaskModal())

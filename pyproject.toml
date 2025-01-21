@@ -8,6 +8,7 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "asteval>=1.0.6",
     "datasets>=3.2.0",
     "devtools>=0.12.2",
     "fire>=0.7.0",

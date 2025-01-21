@@ -40,7 +40,8 @@ def render_state(state: BooleanState):
 
     app = Main(
         # Input state
-        Div(cls="grid grid-cols-3 gap-4 w-[1200px] ml-4")(
+        H1("Rules Playground", cls="text-3xl font-bold mt-0"),
+        Div(cls="grid grid-cols-3 gap-4 w-[1200px] ml-4 mt-4")(
             Sl_card(cls="rounded-lg shadow-lg")(
                 Div(Strong("Input Sequence"), slot="header"),
                 Div(
@@ -88,7 +89,7 @@ def render_state(state: BooleanState):
     return app
 
 
-def CalculatorView(rt):
+def RulesPlaygroundView(rt):
     @rt("/")
     def get():
         return render_state(state)

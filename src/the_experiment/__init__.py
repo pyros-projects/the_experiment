@@ -12,8 +12,9 @@ from fasthtml.components import (
 from devtools import debug
 from monsterui.all import *
 
+from the_experiment.app.modules.rules_editor_view import create_rule_editor
 from the_experiment.app.modules.shoelace_app import app as shoelace_app
-from the_experiment.app.modules.calculator_view import CalculatorView
+from the_experiment.app.modules.rules_playground import RulesPlaygroundView
 from the_experiment.app.modules.dataset_view import DatasetView
 from the_experiment.app.modules.weight_view import WeightView
 from the_experiment.app.modules.train_view import TrainView
@@ -76,11 +77,13 @@ def get():
                 ),
             ),
             Sl_tab_group()(
-                Sl_tab("Test", slot="nav", panel="test"),
+                Sl_tab("Rules Playground", slot="nav", panel="rules"),
+                Sl_tab("Rules Editor", slot="nav", panel="rules_editor"),
                 Sl_tab("Dataset", slot="nav", panel="dataset"),
                 Sl_tab("Train", slot="nav", panel="train"),
                 Sl_tab("Weights", slot="nav", panel="weights"),
-                Sl_tab_panel(CalculatorView(rt), name="test"),
+                Sl_tab_panel(RulesPlaygroundView(rt), name="rules"),
+                Sl_tab_panel(create_rule_editor(rt), name="rules_editor"),
                 Sl_tab_panel(DatasetView(rt), name="dataset"),
                 Sl_tab_panel(TrainView(rt), name="train"),
                 Sl_tab_panel(WeightView(rt), name="weights"),
@@ -95,7 +98,6 @@ def get(icon: str):
         return f.read()
 
 
-serve()
 
 
 def main() -> None:
@@ -113,7 +115,6 @@ def main() -> None:
     group.add_argument("--train_cnn2", type=str, help="Train a cnn for comparison")
     group.add_argument("--train_mann", type=str, help="Train a mann for comparison")
     group.add_argument("--generate", action="store_true", help="Generate sequences")
-    group.add_argument("--testui", action="store_true")
     group.add_argument("--app", action="store_true")
 
     # Optional output parameter for generate
@@ -137,10 +138,12 @@ def main() -> None:
             print("No folder specified")
 
     if args.app:
-        import webview
+        serve()
 
-        webview.create_window("Flask App", "http://127.0.0.1:5001")
-        webview.start()
+        # import webview
+
+        # webview.create_window("Flask App", "http://127.0.0.1:5001")
+        # webview.start()
 
     elif args.train:
         folder = args.train
@@ -167,10 +170,6 @@ def main() -> None:
     elif args.train_mann:
         folder = args.train_mann
         training_mann(folder)
-
-    elif args.testui:
-        # start webserver
-        serve()
 
     elif args.generate:
         if args.omit:

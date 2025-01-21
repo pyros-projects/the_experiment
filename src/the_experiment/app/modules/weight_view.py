@@ -1,5 +1,5 @@
 from fasthtml.common import *
-from fasthtml.components import Sl_card, Sl_select,Sl_split_panel
+from fasthtml.components import Sl_card, Sl_select,Sl_split_panel, Sl_tab_group, Sl_tab, Sl_tab_panel, Sl_radio_group, Sl_radio_button, Sl_option
 import numpy as np
 import json
 
@@ -54,13 +54,15 @@ def create_heatmap(weights, title):
         "colorscale": "RdBu_r",
         "zmin": -max_abs,
         "zmax": max_abs,
+        "showscale": True,  # Ensure colorbar is always shown
     }]
 
     layout = {
-        "title": None,  # Remove title - we'll use card header
-        "margin": {"l": 40, "r": 20, "t": 20, "b": 30},  # Tighter margins
-        "width": None,  
-        "height": 350,  # Slightly shorter
+        "title": None,
+        "margin": {"l": 40, "r": 20, "t": 20, "b": 30},
+        "width": None,  # Allow dynamic width
+        "height": None, # Allow dynamic height
+        "autosize": True, # Enable autosizing
         "xaxis": {
             "title": None,
             "side": "bottom",
@@ -74,8 +76,9 @@ def create_heatmap(weights, title):
         "coloraxis": {
             "colorbar": {
                 "title": None,
-                "thickness": 15,  # Thinner colorbar
+                "thickness": 15,
                 "len": 0.9,
+                "tickformat": ".3f"  # Format colorbar numbers
             }
         },
     }
@@ -84,7 +87,7 @@ def create_heatmap(weights, title):
 
 def create_stats_panel(stats, shape):
     """Create a compact stats panel"""
-    return Div(cls="grid grid-cols-4 gap-2 mb-2 text-sm")(
+    return Div(cls="grid grid-cols-1 gap-2 mb-2 text-sm")(
         Div(cls="px-2 py-1 bg-slate-50 rounded")(
             Div("Mean", cls="text-slate-500"),
             Strong(f"{stats['mean']:.3f}"),
@@ -104,46 +107,61 @@ def create_stats_panel(stats, shape):
     )
 
 def weight_view(model):
-    return Sl_card(cls="w-[100%]")(
+    return Sl_card(cls="w-full h-full")(  # Changed to full width/height
         Div(Strong("Weight Visualization"), slot="header"),
         Div(cls="grid grid-cols-2 gap-4 p-4")(
             # Layer selector
             Div(
-                Sl_select(
-                    *[Option(f"Layer {i}", value=str(i)) 
-                      for i in range(len(model.transformer.h))],
-                    name="layer",
+                Sl_select(cls="text-primary bg-background w-[200px] h-auto border",name="layer",
                     hx_get="/weights",
                     hx_target="#weight-display",
-                    hx_trigger="change",
+                    hx_trigger="sl-change",
                     hx_include="[name='component']",
-                    placeholder="Select Layer",
+                    placeholder="Select Layer",)(
+                    *[Sl_option(f"Layer {i}", value=str(i)) 
+                      for i in range(len(model.transformer.h))],
+                    
                 ),
             ),
             # Component selector
             Div(
-                Sl_select(
-                    Option("MLP", value="mlp", selected=True),
-                    Option("Attention", value="attention"),
+                Sl_select(cls="text-primary bg-background w-[200px] h-auto border")(
+                    Sl_option("MLP", value="mlp", selected=True),
+                    Sl_option("Attention", value="attention"),
                     name="component",
                     hx_get="/weights",
                     hx_target="#weight-display",
-                    hx_trigger="change",
+                    hx_trigger="sl-change",
                     hx_include="[name='layer']",
                     placeholder="Select Component",
                 ),
             ),
         ),
-        # Weight display area
-        Div(id="weight-display", cls="mt-2 w-[100%] h-[100%]"),
+        Div(id="weight-display", cls="mt-2 w-full h-[calc(100vh-200px)]"),  # Set explicit height
         Script("""
+            // Initial load
             htmx.ajax('GET', '/weights?layer=0&component=mlp', {
                 target: '#weight-display'
             });
             
-            window.addEventListener('resize', function() {
-                Plotly.Plots.resize(document.getElementsByClassName('js-plotly-plot'));
-            });
+            // Handle resize
+            function resizePlots() {
+                const plots = document.getElementsByClassName('js-plotly-plot');
+                for(let plot of plots) {
+                    Plotly.Plots.resize(plot);
+                }
+            }
+            
+            // Debounce function to prevent too many resize calls
+            function debounce(func, wait) {
+                let timeout;
+                return function() {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func(), wait);
+                };
+            }
+            
+            window.addEventListener('resize', debounce(resizePlots, 250));
         """),
     )
 
@@ -160,6 +178,28 @@ def WeightView(rt):
             Div(Strong("Error"), slot="header"),
             P("Please ensure a model is trained and selected.", cls="p-4 text-red-500")
         )
+        
+        
+    @rt("/attention-view")
+    def get(weight_group: str, layer: int = 0):
+        weights, stats = get_layer_weights(model, layer, "attention")
+        return create_attention_view(weight_group, weights[weight_group], stats[weight_group])
+
+    def create_attention_view(name, weights, stats):
+        plot_data = create_heatmap(weights, f"{name.title()} Weights")
+        return Div(cls="space-y-2 w-full h-full")(
+            create_stats_panel(stats, weights.shape),
+            P(f"Matrix: {weights.shape[0]}×{weights.shape[1]}", 
+            cls="text-xs text-slate-500 mb-2"),
+            Div(id=f"heatmap-{name}", cls="w-full h-[70vh] bg-white rounded shadow-sm"),
+            Script(f"""
+                Plotly.newPlot('heatmap-{name}', {plot_data}, 
+                    undefined, {{
+                        responsive: true,
+                        useResizeHandler: true
+                    }});
+            """)
+        )
 
     @rt("/weights")
     def get(layer: int = 0, component: str = "mlp"):
@@ -173,33 +213,39 @@ def WeightView(rt):
         if component == "mlp":
             plot_data = create_heatmap(weights, f"Layer {layer} MLP Weights")
             
-            def render_heatmap():
-                return Div(cls="space-y-2 w-[100%] h-[100%]")(
+            return Div(cls="space-y-2 w-full h-full")(
                 create_stats_panel(stats, weights.shape),
                 P(f"Matrix: {weights.shape[0]}×{weights.shape[1]}", 
-                  cls="text-xs text-slate-500 mb-2"),
-                Div(id="heatmap", cls="w-full bg-white rounded shadow-sm"),
-                Script(f"Plotly.newPlot('heatmap', {plot_data}, undefined, {{responsive: true}});"))
-            
-            return render_heatmap()
+                cls="text-xs text-slate-500 mb-2"),
+                Div(id="heatmap", cls="w-full h-[70vh] bg-white rounded shadow-sm"),
+                Script(f"""
+                    Plotly.newPlot('heatmap', {plot_data}, undefined, {{
+                        responsive: true,
+                        useResizeHandler: true
+                    }});
+                """)
+            )
         else:
-            sections = []
-            for name in ["query", "key", "value"]:
-                plot_data = create_heatmap(weights[name], 
-                                         f"Layer {layer} {name.title()} Weights")
-                
-                sections.append(Div(cls="space-y-2 mb-6")(
-                    Strong(f"{name.title()} Weights", cls="text-sm"),
-                    create_stats_panel(stats[name], weights[name].shape),
-                    P(f"Matrix: {weights[name].shape[0]}×{weights[name].shape[1]}", 
-                      cls="text-xs text-slate-500 mb-2"),
-                    Div(id=f"heatmap-{name}", cls="w-full bg-white rounded shadow-sm"),
-                    Script(f"""
-                        Plotly.newPlot('heatmap-{name}', {plot_data}, 
-                            undefined, {{responsive: true}});
-                    """)
-                ))
-
-            return Div(cls="space-y-4")(*sections)
+            return Div(
+                # Radio group for selection
+                Sl_radio_group(
+                    id="attention-tabs",
+                    name="weight_group",
+                    cls="attention-tabs mb-4",
+                    hx_get="/attention-view",
+                    hx_target="#attention-content",
+                    hx_trigger="sl-change",
+                    hx_include="[name='layer']"
+                )(
+                    Sl_radio_button("Query", value="query", checked=True),
+                    Sl_radio_button("Key", value="key"),
+                    Sl_radio_button("Value", value="value"),
+                ),
+                # Content area
+                Div(id="attention-content", cls="w-full")(
+                    # Initial view (Query)
+                    create_attention_view("query", weights["query"], stats["query"])
+                )
+            )
 
     return  Sl_split_panel(Div(weight_view(model), slot="start"), Div(slot="end")(Div()))

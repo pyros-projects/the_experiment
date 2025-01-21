@@ -7,13 +7,20 @@ from fasthtml.components import (
     Sl_split_panel,
 )
 from monsterui.all import *
+from dataclasses import dataclass
+
 from the_experiment.app.components.calculator_components import InputGrid
-from the_experiment.app.modules.calculator_view import BooleanState, calculate_new_state
-from the_experiment.app.components.dataset_list import tasks_homepage
+from the_experiment.app.modules.rules_playground import BooleanState, calculate_new_state
+from the_experiment.app.components.dataset_list import create_dataset_table
 
+@dataclass
+class Prompt:
+    prompt = BooleanState()
 
-dataset_state = BooleanState()
-
+@dataclass
+class RemovalList:
+    list_of_removed_prompts: list[Prompt]
+    
 
 def render_menu():
     return Sl_menu(
@@ -57,16 +64,19 @@ def split_panel_1(state):
     )
 
 
-def render_state(state: BooleanState):
+def render_state(state: BooleanState,dataset_list_view):
     new_A, new_B, new_C, new_D, old_sum, new_sum = calculate_new_state(state)
     return Grid(id="dataset-main")(
         Sl_split_panel(position="50")(
-            Div(split_panel_1(state), slot="start"), Div(slot="end")(tasks_homepage)
+            Div(split_panel_1(state), slot="start"), Div(slot="end")(dataset_list_view)
         )
     )
 
 
 def DatasetView(rt):
+    
+    dataset_list_view = create_dataset_table(rt)
+    
     @rt("/dataset_toggle/{var}")
     def post(var: str):
         # Toggle the state variable
@@ -74,4 +84,4 @@ def DatasetView(rt):
         setattr(dataset_state, var, not current)
         return render_state(dataset_state)
 
-    return render_state(BooleanState())
+    return render_state(BooleanState(),dataset_list_view)
