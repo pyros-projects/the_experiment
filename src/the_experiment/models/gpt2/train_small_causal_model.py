@@ -16,36 +16,35 @@ from typing import List, Dict, Any
 from pathlib import Path
 
 
-
-
 # Configure loguru
 # Create logs directory if it doesn't exist
 log_dir = Path("logs")
-log_dir.mkdir(exist_ok=True,parents=True)
+log_dir.mkdir(exist_ok=True, parents=True)
 
 logger.remove()  # Remove default handler
 logger.add(
     sys.stdout,
     colorize=True,
     format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
-    level="INFO"
+    level="INFO",
 )
 logger.add(
     log_dir / "training_{time}.log",
     rotation="100 MB",
     retention="10 days",
-    level="DEBUG"
+    level="DEBUG",
 )
 
 MAX_LENGTH = 64  # Our inputs are short
 
+
 def load_jsonl(path: str) -> List[Dict[str, Any]]:
     """
     Load data from a JSONL file with error handling.
-    
+
     Args:
         path: Path to the JSONL file
-    
+
     Returns:
         List of dictionaries containing the data
     """
@@ -53,7 +52,7 @@ def load_jsonl(path: str) -> List[Dict[str, Any]]:
     if not os.path.exists(path):
         logger.error(f"File not found: {path}")
         raise FileNotFoundError(f"File not found: {path}")
-    
+
     lines = []
     try:
         with open(path, "r", encoding="utf-8") as f:
@@ -63,21 +62,21 @@ def load_jsonl(path: str) -> List[Dict[str, Any]]:
                 except json.JSONDecodeError as e:
                     logger.warning(f"Error parsing line {line_num} in {path}: {e}")
                     continue
-        
+
         logger.success(f"Successfully loaded {len(lines)} examples from {path}")
         return lines
     except Exception as e:
         logger.error(f"Error reading file {path}: {e}")
         raise
-    
+
 
 def create_hf_dataset(jsonl_data: List[Dict[str, str]]) -> Dataset:
     """
     Converts list of {"prompt": ..., "completion": ...} into a Hugging Face Dataset object.
-    
+
     Args:
         jsonl_data: List of dictionaries containing prompts and completions
-    
+
     Returns:
         Hugging Face Dataset object
     """
@@ -88,25 +87,28 @@ def create_hf_dataset(jsonl_data: List[Dict[str, str]]) -> Dataset:
             if "prompt" not in item or "completion" not in item:
                 logger.warning(f"Missing prompt or completion in item {idx}")
                 continue
-                
+
             merged_text = item["prompt"] + item["completion"]
             texts.append({"text": merged_text})
         except Exception as e:
             logger.error(f"Error processing item {idx}: {e}")
             continue
-    
+
     logger.success(f"Created dataset with {len(texts)} examples")
     hf_dataset = Dataset.from_list(texts)
     return hf_dataset
 
-def tokenize_function(example: Dict[str, str], tokenizer: GPT2TokenizerFast) -> Dict[str, torch.Tensor]:
+
+def tokenize_function(
+    example: Dict[str, str], tokenizer: GPT2TokenizerFast
+) -> Dict[str, torch.Tensor]:
     """
     Tokenizes the input text with error handling.
-    
+
     Args:
         example: Dictionary containing the text to tokenize
         tokenizer: GPT2 tokenizer instance
-    
+
     Returns:
         Dictionary containing tokenized inputs
     """
@@ -115,7 +117,7 @@ def tokenize_function(example: Dict[str, str], tokenizer: GPT2TokenizerFast) -> 
             example["text"],
             max_length=MAX_LENGTH,
             padding="max_length",
-            truncation=True
+            truncation=True,
         )
         result["labels"] = result["input_ids"].copy()
         return result
@@ -123,19 +125,20 @@ def tokenize_function(example: Dict[str, str], tokenizer: GPT2TokenizerFast) -> 
         logger.error(f"Error tokenizing example: {e}")
         raise
 
+
 def setup_training_environment(output_dir: str) -> None:
     """
     Sets up the training environment and checks for CUDA availability.
-    
+
     Args:
         output_dir: Directory for saving model outputs
     """
     logger.info("Setting up training environment")
-    
+
     # Create output directory
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     logger.info(f"Created output directory: {output_dir}")
-    
+
     # Check CUDA availability
     if torch.cuda.is_available():
         device = torch.cuda.get_device_name(0)
@@ -143,14 +146,13 @@ def setup_training_environment(output_dir: str) -> None:
     else:
         logger.warning("No GPU available, using CPU")
 
+
 def training(folder, callback=None):
     try:
         # Setup training environment
         output_dir = f"./out/{folder}/tiny-gpt2-causal"
         setup_training_environment(output_dir)
-        
-       
-        
+
         # 1. Load data
         logger.info("Starting data loading process")
         train_data = load_jsonl("dataset/train.jsonl")
@@ -173,26 +175,29 @@ def training(folder, callback=None):
         train_dataset = train_dataset.map(
             lambda ex: tokenize_function(ex, tokenizer),
             batched=False,
-            desc="Tokenizing train dataset"
+            desc="Tokenizing train dataset",
         )
         valid_dataset = valid_dataset.map(
             lambda ex: tokenize_function(ex, tokenizer),
             batched=False,
-            desc="Tokenizing validation dataset"
+            desc="Tokenizing validation dataset",
         )
         test_dataset = test_dataset.map(
             lambda ex: tokenize_function(ex, tokenizer),
             batched=False,
-            desc="Tokenizing test dataset"
+            desc="Tokenizing test dataset",
         )
 
         # Set format
         logger.info("Setting dataset formats")
-        for dataset, name in [(train_dataset, "train"),
-                            (valid_dataset, "validation"),
-                            (test_dataset, "test")]:
-            dataset.set_format(type="torch",
-                             columns=["input_ids", "attention_mask", "labels"])
+        for dataset, name in [
+            (train_dataset, "train"),
+            (valid_dataset, "validation"),
+            (test_dataset, "test"),
+        ]:
+            dataset.set_format(
+                type="torch", columns=["input_ids", "attention_mask", "labels"]
+            )
             logger.debug(f"Set format for {name} dataset")
 
         # 5. Define model config
@@ -233,37 +238,35 @@ def training(folder, callback=None):
             args=training_args,
             train_dataset=train_dataset,
             eval_dataset=valid_dataset,
-            callbacks=callbacks
+            callbacks=callbacks,
         )
-            
-            
-        th = threading.Thread(target=training_llm_in_background, args=(trainer,valid_dataset,output_dir,tokenizer), daemon=True)
+
+        th = threading.Thread(
+            target=training_llm_in_background,
+            args=(trainer, valid_dataset, output_dir, tokenizer),
+            daemon=True,
+        )
         th.start()
-        
-        
 
     except Exception as e:
         logger.exception(f"Training failed with error: {str(e)}")
         raise
-    
-    
-def training_llm_in_background(trainer: Trainer,valid_dataset,output_dir,tokenizer):
+
+
+def training_llm_in_background(trainer: Trainer, valid_dataset, output_dir, tokenizer):
     """
-    Runs `trainer.train()` in a background thread. 
+    Runs `trainer.train()` in a background thread.
     """
     try:
-    
-        
         # 9. Train
 
         trainer.train()
-    
+
         # 10. Evaluate
         eval_result = trainer.evaluate(eval_dataset=valid_dataset)
         perplexity = torch.exp(torch.tensor(eval_result["eval_loss"]))
         logger.info(f"Validation Perplexity: {perplexity:.2f}")
-        
-        
+
         logger.info("Saving model and tokenizer")
         final_output_dir = f"{output_dir}/final"
         trainer.save_model(final_output_dir)
@@ -271,7 +274,5 @@ def training_llm_in_background(trainer: Trainer,valid_dataset,output_dir,tokeniz
         logger.success(f"Model and tokenizer saved to {final_output_dir}")
         logger.info("LLM training thread: finished")
 
-        
     except Exception as e:
         logger.exception(f"Training LLM failed: {e}")
-

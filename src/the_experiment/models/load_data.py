@@ -5,6 +5,7 @@ import torch
 import random
 from torch.utils.data import Dataset
 
+
 class MiniworldTextDataset(Dataset):
     def __init__(self, path, tokenizer, max_length=64):
         super().__init__()
@@ -28,15 +29,12 @@ class MiniworldTextDataset(Dataset):
             max_length=self.max_length,
             truncation=True,
             padding="max_length",
-            return_tensors="pt"
+            return_tensors="pt",
         )
         input_ids = encoded["input_ids"].squeeze(0)
         attention_mask = encoded["attention_mask"].squeeze(0)
 
-        # For next-token prediction, labels = input_ids (shifted internally, 
+        # For next-token prediction, labels = input_ids (shifted internally,
         # but we'll keep it simple: model will do next-step on the same IDs)
         # We'll do a manual shift in the training loop for RNN/CNN if needed.
-        return {
-            "input_ids": input_ids,
-            "attention_mask": attention_mask
-        }
+        return {"input_ids": input_ids, "attention_mask": attention_mask}

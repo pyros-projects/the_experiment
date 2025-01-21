@@ -1,4 +1,21 @@
-from fasthtml.common import fast_app, Div, P, serve, H1,Button,Body,A, Ul, Li, Script, Link,Input,NotStr,picolink, Style
+from fasthtml.common import (
+    fast_app,
+    Div,
+    P,
+    serve,
+    H1,
+    Button,
+    Body,
+    A,
+    Ul,
+    Li,
+    Script,
+    Link,
+    Input,
+    NotStr,
+    picolink,
+    Style,
+)
 from monsterui.all import *
 
 
@@ -30,15 +47,23 @@ style = Style("""
         """)
 
 
-hdrs = (             
-                Script(src="https://cdn.tailwindcss.com"),
-                Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.19.1/cdn/themes/light.css"),
-                #Link(rel="stylesheet", media="(prefers-color-scheme:dark)",href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.19.1/cdn/themes/dark.css",onload="document.documentElement.classList.add('sl-theme-dark');"),
-                Script(src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.19.1/cdn/shoelace.js",type="module"),
-                Script(src="https://cdn.plot.ly/plotly-2.24.1.min.js"),
-                Theme.slate.headers(highlightjs=True,mode='light'),
-                Script(src="https://cdn.plot.ly/plotly-2.24.1.min.js"),
-                Script(src="https://unpkg.com/htmx.org/dist/ext/sse.js"),
-        )
+hdrs = (
+    Script(src="https://cdn.tailwindcss.com"),
+    Link(
+        rel="stylesheet",
+        href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.19.1/cdn/themes/light.css",
+    ),
+    # Link(rel="stylesheet", media="(prefers-color-scheme:dark)",href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.19.1/cdn/themes/dark.css",onload="document.documentElement.classList.add('sl-theme-dark');"),
+    Script(
+        src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.19.1/cdn/shoelace.js",
+        type="module",
+    ),
+    Script(src="https://cdn.plot.ly/plotly-2.24.1.min.js"),
+    Theme.slate.headers(highlightjs=True, mode="light"),
+    Script(src="https://cdn.plot.ly/plotly-2.24.1.min.js"),
+    Script(src="https://unpkg.com/htmx.org/dist/ext/sse.js"),
+)
 
-app = fast_app(hdrs=hdrs,pico=False,default_hdrs=True,live=True,title="The Experiment")
+app = fast_app(
+    hdrs=hdrs, pico=False, default_hdrs=True, live=True, title="The Experiment"
+)
