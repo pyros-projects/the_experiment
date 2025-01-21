@@ -1,8 +1,5 @@
 from fasthtml.common import *
-import torch
-from transformers import GPT2LMHeadModel
 import numpy as np
-import plotly.express as px
 import json
 
 from the_experiment.models.model_eval import MODEL_EVALUATOR

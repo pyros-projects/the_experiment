@@ -1,8 +1,6 @@
 # file: load_data.py
 
 import json
-import torch
-import random
 from torch.utils.data import Dataset
 
 

@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Optional, Set, Dict
+from typing import List, Optional, Set
 import json
 from datetime import datetime
 from fasthtml.common import *

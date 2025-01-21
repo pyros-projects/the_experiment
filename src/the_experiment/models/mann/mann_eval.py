@@ -3,8 +3,6 @@
 import torch
 from transformers import GPT2TokenizerFast
 from typing import List, Optional, Tuple
-from pathlib import Path
-import numpy as np
 from loguru import logger
 
 from the_experiment.models.mann.mann_lm import MANNLanguageModel

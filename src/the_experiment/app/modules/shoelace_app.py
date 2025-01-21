@@ -1,19 +1,7 @@
 from fasthtml.common import (
     fast_app,
-    Div,
-    P,
-    serve,
-    H1,
-    Button,
-    Body,
-    A,
-    Ul,
-    Li,
     Script,
     Link,
-    Input,
-    NotStr,
-    picolink,
     Style,
 )
 from monsterui.all import *

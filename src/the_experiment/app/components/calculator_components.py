@@ -1,9 +1,7 @@
-from dataclasses import dataclass
 from fasthtml.common import *
-from devtools import debug
-from the_experiment.models.dataset import int2bool
-from the_experiment.models.model_eval import ModelEvaluator
+
 from the_experiment.models.model_eval import MODEL_EVALUATOR
+from the_experiment.rules.rules import int2bool
 
 
 def boolean_circle(value: bool, name: str, onclick: str, htmx_target="#main-content"):

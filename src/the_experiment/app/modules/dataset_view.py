@@ -1,15 +1,9 @@
-from dataclasses import dataclass
 from fasthtml.common import *
 from fasthtml.components import (
-    Sl_tab_group,
-    Sl_tab,
-    Sl_tab_panel,
-    Sl_checkbox,
     Sl_button,
     Sl_card,
     Sl_menu,
     Sl_menu_item,
-    Sl_divider,
     Sl_split_panel,
 )
 from monsterui.all import *

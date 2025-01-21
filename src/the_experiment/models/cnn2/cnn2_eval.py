@@ -3,8 +3,6 @@
 import torch
 from transformers import GPT2TokenizerFast
 from typing import List, Optional
-from pathlib import Path
-import numpy as np
 from loguru import logger
 
 from the_experiment.comparison.cnn_lm import CNNLanguageModel

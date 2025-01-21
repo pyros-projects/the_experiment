@@ -1,9 +1,8 @@
 import os
 import random
 import json
-from devtools import debug
 
-from the_experiment.rules.rules import bool2int, int2bool, prompt_to_completion
+from the_experiment.rules.rules import prompt_to_completion
 
 
 def generate_example(to_omit_list=None):

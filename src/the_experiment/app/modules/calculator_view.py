@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from fasthtml.common import *
 from monsterui.all import *
-from fasthtml.components import Sl_card, Sl_tab, Sl_tab_panel, Sl_checkbox, Sl_button
+from fasthtml.components import Sl_card
 from the_experiment.app.components.calculator_components import (
     CnnOutputGrid,
     InputGrid,

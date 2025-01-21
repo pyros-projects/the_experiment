@@ -1,7 +1,6 @@
 import torch
 
-from the_experiment.models.dataset import bool2int
-from typing import List, Dict, Optional, Tuple
+from the_experiment.rules.rules import bool2int
 from devtools import debug
 
 from the_experiment.models.load_model import check_out_folder, load_models
@@ -45,7 +44,7 @@ class ModelEvaluator:
 
             output = self.tokenizer.decode(output[0])
             return str(output)
-        except Exception as e:
+        except Exception:
             return None
 
     def eval_cnn(self, prompt_text: str) -> str:
@@ -124,7 +123,7 @@ class ModelEvaluator:
                 # Decode the generated sequence
                 output_text = self.tokenizer.decode(generated_ids)
                 return output_text
-        except Exception as e:
+        except Exception:
             return None
 
     def eval_model_bool(self, a, b, c, d, e) -> str:

@@ -2,7 +2,7 @@ import json
 import threading
 import torch
 import os
-from datasets import load_dataset, Dataset
+from datasets import Dataset
 from transformers import (
     GPT2Config,
     GPT2TokenizerFast,
