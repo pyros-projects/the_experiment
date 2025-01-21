@@ -8,6 +8,8 @@ from fasthtml.components import (
     Sl_select,
     Sl_option,
     Sl_icon,
+    Sl_menu,
+    Sl_menu_item,
 )
 from devtools import debug
 from monsterui.all import *
@@ -29,6 +31,9 @@ from the_experiment.rules.rules import prompt_to_completion
 
 
 app, rt = shoelace_app
+
+def icon(nm, text, **kw): return Sl_icon(slot='prefix', name=nm, **kw),P(text)
+def menu(nm, text, path): return Sl_menu_item(*icon(nm, text), cls='rounded-md mb-2', hx_get=path)
 
 
 @rt("/")
@@ -76,21 +81,36 @@ def get():
                     ]
                 ),
             ),
-            Sl_tab_group()(
-                Sl_tab("Rules Playground", slot="nav", panel="rules"),
-                Sl_tab("Rules Editor", slot="nav", panel="rules_editor"),
-                Sl_tab("Dataset", slot="nav", panel="dataset"),
-                Sl_tab("Train", slot="nav", panel="train"),
-                Sl_tab("Weights", slot="nav", panel="weights"),
-                Sl_tab_panel(RulesPlaygroundView(rt), name="rules"),
-                Sl_tab_panel(create_rule_editor(rt), name="rules_editor"),
-                Sl_tab_panel(DatasetView(rt), name="dataset"),
-                Sl_tab_panel(TrainView(rt), name="train"),
-                Sl_tab_panel(WeightView(rt), name="weights"),
-            ),
+            Grid(cls="grid-cols-2 flex-auto flex-nowrap place-content-start w-[38%]")(
+                Nav(hx_target='#main-area', cls='w-64 h-auto bg-white border-r border-gray-200 p-4 overflow-y-auto')(
+                    Sl_menu(
+                        menu('play-circle', 'Rules Playground', '/rules'),
+                        menu('pencil-square', 'Rules Editor', '/rules_editor'),
+                        menu('database', 'Dataset Manager', '/dataset'),
+                        menu('speedometer', 'Train', '/train'),
+                        menu('diagram-3', 'Weight Watcher', '/weights'),
+                    ), 
+                ),
+                Div(id='main-area')(RulesPlaygroundView(rt)),)
         ),
     )
 
+
+
+@rt('/rules')
+def get(): return RulesPlaygroundView(rt)
+
+@rt('/rules_editor')
+def get(): return create_rule_editor(rt)
+
+@rt('/dataset')
+def get(): return DatasetView(rt)
+
+@rt('/train')
+def get(): return TrainView(rt)
+
+@rt('/weights')
+def get(): return WeightView(rt)
 
 @rt("/icon/{icon}")
 def get(icon: str):
