@@ -1,6 +1,7 @@
 from dataclasses import dataclass
+import json
 from fasthtml.common import *
-from fasthtml.components import Sl_tab_group, Sl_tab, Sl_checkbox, Sl_button, Sl_split_panel, Sl_input
+from fasthtml.components import Sl_tab_group, Sl_tab, Sl_checkbox, Sl_button, Sl_split_panel, Sl_input,Sl_card
 from monsterui import *
 
 from the_experiment.models.cnn.train_cnn import training_cnn
@@ -15,28 +16,18 @@ from starlette.background import BackgroundTasks
 from the_experiment.models.model_eval import MODEL_EVALUATOR
 from the_experiment.models.rnn.train_rnn import training_rnn
 
-@dataclass
-class TrainState:
-    LLM: bool = False
-    RNN: bool = False
-    CNN: bool = False
-    MANN: bool = False
-    CNN2: bool = False
-    folder: str = "Hello"
-    
-train_state = TrainState()
+@dataclass 
+class TrainingForm:
+    folder: str
+    train_llm: bool = False
+    train_rnn: bool = False 
+    train_cnn: bool = False
 
-@patch
-def __ft__(self:TrainState):
-    return Div(
-        AX(Sl_checkbox("Train LLM",cls="m-4",id="train_llm",checked=self.LLM),"/set/LLM","checkboxes",hx_swap="outerHTML"),
-        AX(Sl_checkbox("Train RNN",cls="m-4",id="train_rnn", checked=self.RNN),"/set/RNN","checkboxes",hx_swap="outerHTML"),
-        AX(Sl_checkbox("Train CNN",cls="m-4",id="train_cnn", checked=self.CNN),"/set/CNN","checkboxes",hx_swap="outerHTML"),
-        AX(Sl_checkbox("Train MANN",cls="m-4",id="train_mann", checked=self.MANN),"/set/MANN","checkboxes",hx_swap="outerHTML"),
-        AX(Sl_checkbox("Train CNN2",cls="m-4",id="train_cnn2", checked=self.CNN2),"/set/CNN2","checkboxes",hx_swap="outerHTML"),
-        Sl_input(self.folder,name="folder",id="folder",cls="m-4"),
-        id="train_state"
-    )
+    def __post_init__(self):
+        if not self.folder or self.folder.isspace():
+            raise ValueError("Output folder cannot be empty")
+
+
 
 class StatsCallback(TrainerCallback):
     from devtools import debug
@@ -111,70 +102,114 @@ class StatsCallback(TrainerCallback):
         return control
 
 def checkboxes():
-    return Form(id="checkboxes",cls="flex grid grid-cols-1 gap-4 w-[500px] m-4")(
-        train_state,
-       
-        Sl_button("Train selected",hx_post='/train',hx_request="include:#folder",hx_swap='none'),
-        Sl_button("Train all",hx_post='/train_all',hx_request="include:#folder",hx_swap='none')
-    )
+    return Sl_card(Div(Strong("Training configurator"),slot="header"),Form(id="checkboxes", cls="flex grid grid-cols-3 gap-4 w-auto m-4")(
+        # Add error div at the top - will be updated via HTMX
+        
+        Sl_checkbox("Train LLM", cls="m-4", name="train_llm"),
+        Sl_checkbox("Train RNN", cls="m-4", name="train_rnn"), 
+        Sl_checkbox("Train CNN", cls="m-4", name="train_cnn"),
+        Sl_input(
+            label="Name for training run", 
+            name="folder",
+            id="folder",
+            cls="m-4 col-span-3",
+            required=True,
+        ),
+        Div(id="form-errors",cls="col-span-3"),
+        Sl_button(
+            "Train selected",
+            hx_post='/train',
+            hx_target="#form-errors",  # Target the error div
+            hx_request="include:#train_llm,#train_rnn,#train_cnn,#folder",
+            cls="col-span-3"
+            
+        ),
+        Sl_button(
+            "Train all",
+            hx_post='/train_all', 
+            hx_target="#form-errors",  # Target the error div
+            hx_request="include:#folder",
+            cls="col-span-3"
+        )
+    ))
 
 def TrainView(rt):
-    @rt("/set/{var}")
-    def get(var: str):
-        current_folder = getattr(train_state, "folder")
-        current = getattr(train_state, var)
-        setattr(train_state, var, not current)
-        setattr(train_state, "folder", current_folder)
-        return checkboxes()
     
     @rt("/training-stats")
     async def get():
         return await monitor.get_stats_stream()
-
+    
     @rt("/train")
-    async def post(folder: str):
-        debug(folder)
-        tasks = []
+    async def post(req):
+        try:
+            # Parse form data into our dataclass
+            form_data = await req.form()
+            training_form_data = TrainingForm(
+                folder=form_data.get('folder'),
+                train_llm=form_data.get('train_llm') == 'on',
+                train_rnn=form_data.get('train_rnn') == 'on',
+                train_cnn=form_data.get('train_cnn') == 'on',
+            )
+            
+            # If validation passes, proceed with training
+            debug(training_form_data.folder)
+            debug(training_form_data.train_llm)
+            debug(training_form_data.train_rnn)
+            debug(training_form_data.train_cnn)
+            
+            tasks = []
         
-        if train_state.LLM:
-            callback = StatsCallback("LLM")
-            # Make sure training() returns a coroutine 
-            if asyncio.iscoroutinefunction(training):
-                task = asyncio.create_task(training(folder, callback=callback))
-            else:
-                # If training is not async, wrap it in run_in_threadpool
-                task = asyncio.create_task(
-                    run_in_threadpool(training, folder, callback=callback)
-                )
-            tasks.append(task)
+            if training_form_data.train_llm:
+                callback = StatsCallback("LLM")
+                # Make sure training() returns a coroutine 
+                if asyncio.iscoroutinefunction(training):
+                    task = asyncio.create_task(training(training_form_data.folder, callback=callback))
+                else:
+                    # If training is not async, wrap it in run_in_threadpool
+                    task = asyncio.create_task(
+                        run_in_threadpool(training, training_form_data.folder, callback=callback)
+                    )
+                tasks.append(task)
+                
+            if training_form_data.train_rnn:
+                callback = StatsCallback("RNN")
+                if asyncio.iscoroutinefunction(training_rnn):
+                    task = asyncio.create_task(training_rnn(training_form_data.folder, callback=callback))
+                else:
+                    task = asyncio.create_task(
+                        run_in_threadpool(training_rnn, training_form_data.folder, callback=callback)
+                    )
+                tasks.append(task)
+                
+            if training_form_data.train_cnn:
+                callback = StatsCallback("CNN")
+                if asyncio.iscoroutinefunction(training_cnn):
+                    task = asyncio.create_task(training_cnn(training_form_data.folder, callback=callback))
+                else:
+                    task = asyncio.create_task(
+                        run_in_threadpool(training_cnn, training_form_data.folder, callback=callback)
+                    )
+                tasks.append(task)
+                
+    
+                
+            debug(tasks)    
+            await asyncio.gather(*tasks)
             
-        if train_state.RNN:
-            callback = StatsCallback("RNN")
-            if asyncio.iscoroutinefunction(training_rnn):
-                task = asyncio.create_task(training_rnn(folder, callback=callback))
-            else:
-                task = asyncio.create_task(
-                    run_in_threadpool(training_rnn, folder, callback=callback)
-                )
-            tasks.append(task)
+            active_folder = MODEL_EVALUATOR.active_folder
+            MODEL_EVALUATOR.reload_models(active_folder)
             
-        if train_state.CNN:
-            callback = StatsCallback("CNN")
-            if asyncio.iscoroutinefunction(training_cnn):
-                task = asyncio.create_task(training_cnn(folder, callback=callback))
-            else:
-                task = asyncio.create_task(
-                    run_in_threadpool(training_cnn, folder, callback=callback)
-                )
-            tasks.append(task)
+            return Div(cls="text-green-500")("Training started successfully!")
+
             
-        await asyncio.gather(*tasks)
-        
-        active_folder = MODEL_EVALUATOR.active_folder
-        MODEL_EVALUATOR.reload_models(active_folder)
+        except ValueError as e:
+            # Return validation error
+            return Div(cls="text-red-500 p-2 border border-red-500 rounded")(str(e))
+
+
 
     return Sl_split_panel(position="30")(
-        Div(fill_form(checkboxes(), train_state), slot="start"),
+        Div(Container(checkboxes()), slot="start"),
         Div(slot="end")(
             Div(cls="w-[100%] items-center")(
                 Div(

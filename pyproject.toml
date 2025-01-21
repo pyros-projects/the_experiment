@@ -31,22 +31,22 @@ dependencies = [
 torch = { index = "pytorch" }
 torchvision = { index = "pytorch" }
 
-[tool.pyright]
-include = ["."]
-exclude = [
-    "**/.venv",
-    "**/dump",          # exclude virtual environment - exclude means that it will not be scanned
-    "**/settings.json",
-    "src/frontend/",
-]
-useLibraryCodeForTypes = true
-ignore = [
-    "**/settings.json",
-] # ignore means that it will be scanned but not checked
-defineConstant = { DEBUG = true }
-reportMissingImports = "error"
-reportMissingTypeStubs = false
-typeCheckingMode = "basic"
+# [tool.pyright]
+# include = ["."]
+# exclude = [
+#     "**/.venv",
+#     "**/dump",          # exclude virtual environment - exclude means that it will not be scanned
+#     "**/settings.json",
+#     "src/frontend/",
+# ]
+# useLibraryCodeForTypes = true
+# ignore = [
+#     "**/settings.json",
+# ] # ignore means that it will be scanned but not checked
+# defineConstant = { DEBUG = true }
+# reportMissingImports = "error"
+# reportMissingTypeStubs = false
+# typeCheckingMode = "basic"
 
 
 [[tool.uv.index]]

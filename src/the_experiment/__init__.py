@@ -12,10 +12,12 @@ from the_experiment.app.modules.heatmap import WeightHeatmap
 from the_experiment.app.modules.train_view import TrainView
 from the_experiment.models.cnn.train_cnn import training_cnn
 from the_experiment.models.cnn2.train_cnn2 import training_cnn2
+from the_experiment.models.dataset import generate_dataset
 from the_experiment.models.gpt2.train_small_causal_model import training
 from the_experiment.models.mann.train_mann import training_mann
 from the_experiment.models.model_eval import MODEL_EVALUATOR
 from the_experiment.models.rnn.train_rnn import training_rnn
+from the_experiment.rules.rules import prompt_to_completion
 
 # from the_experiment.comparison.train_mann import training_mann
 # from the_experiment.models.dataset import generate_dataset
@@ -53,7 +55,7 @@ def get():
                         H1("The Experiment",cls="m-auto text-background bg-primary pl-3"),
                         P('LLM experiment toolkit v0.3.5',cls="ml-auto text-background bg-primary pl-3")
                     ),
-                    P("Training folder selection:",cls="ml-8"),
+                    P("Training run selection:",cls="ml-8"),
                     Sl_select(cls="ml-4 w-[200px]",size="small",placeholder="Select model folder",value=f"{pre_selection}")(
                         *[Sl_option(
                             Sl_icon(slot="suffix",src="icon/llm") if folder.has_llm else Div(),
@@ -185,8 +187,7 @@ def call_test(folder,prompt_text: str) -> dict:
     manual_res = prompt_to_completion(prompt_text)
     debug(manual_res)
     
-    model_eval = ModelEvaluator(folder)
-    
+    model_eval = MODEL_EVALUATOR
     # calculate by gpt2
     output = model_eval.eval_model(prompt_text)
     debug(output)

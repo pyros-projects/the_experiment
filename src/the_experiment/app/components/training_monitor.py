@@ -110,92 +110,81 @@ monitor = TrainingMonitor()
 def training_stats_component():
     """Returns the HTML component for displaying training stats"""
     return Card(cls="p-4 w-full max-w-[1200px] mx-auto")(
-    #H2("Training Progress", cls="text-xl font-bold mb-4"),
-    Div(
-        # Status at the top
-        Div(id="training-status", cls="text-lg font-medium mb-2 text-center"),
-        
-        # Progress bar
-        Div(id="training-progress", cls="mb-4"),
-        
-        # Two-column layout for stats and chart
-        Div(cls="flex gap-6")(
-            # Stats grid on the left
-            Div(
-                id="training-stats",
-                cls="flex flex-col gap-4 w-[200px]"  # Fixed width for the stats column
-            ),
-            
-            # Chart container on the right
-            Div(cls="flex-grow h-full min-h-[500px]")(
-                Canvas(id="loss-graph", cls="w-full h-full bg-gray-100 rounded")
-            )
-        ),
-        cls="space-y-4"
-    ),
+        Div(id="charts-container", cls="grid gap-6"),
         Script(src="https://cdn.jsdelivr.net/npm/chart.js"),
         Script("""
-            let lossChart;
+            const charts = {};
+            const chartData = {};
 
-            function initChart() {
-                if (lossChart) {
-                    lossChart.destroy();
-                }
-                const ctx = document.getElementById('loss-graph').getContext('2d');
-                lossChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: [],
-                        datasets: [{
-                            label: 'Training Loss',
-                            data: [],
-                            borderColor: 'rgb(75, 192, 192)',
-                            backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                            tension: 0.3,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        animation: {
-                            duration: 150
+            function createChartContainer(modelName) {
+                return `
+                    <div class="chart-wrapper p-4 bg-white rounded-lg shadow-lg">
+                        <div id="training-status-${modelName}" class="text-lg font-medium mb-2 text-center"></div>
+                        
+                        <div id="training-progress-${modelName}" class="mb-4"></div>
+                        
+                        <div class="flex gap-6">
+                            <div id="training-stats-${modelName}" 
+                                 class="flex flex-col gap-4 w-[200px]">
+                            </div>
+                            
+                            <div class="flex-grow h-full min-h-[300px]">
+                                <canvas id="loss-graph-${modelName}" 
+                                      class="w-full h-full bg-gray-100 rounded">
+                                </canvas>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function initChart(modelName) {
+                if (!charts[modelName]) {
+                    const ctx = document.getElementById(`loss-graph-${modelName}`).getContext('2d');
+                    charts[modelName] = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: [],
+                            datasets: [{
+                                label: `${modelName} Training Loss`,
+                                data: [],
+                                borderColor: 'rgb(75, 192, 192)',
+                                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                                tension: 0.3,
+                                fill: true
+                            }]
                         },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Loss'
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            animation: { duration: 150 },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: { display: true, text: 'Loss' }
+                                },
+                                x: {
+                                    title: { display: true, text: 'Steps' }
                                 }
                             },
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Steps'
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: 'top'
+                            plugins: {
+                                legend: { display: true, position: 'top' }
                             }
                         }
-                    }
-                });
+                    });
+                }
             }
 
             function updateStatus(stats) {
-                let status = `${stats.model_name}: ${stats.status}`;
+                let status = `${stats.status}`;
                 if (stats.status.includes('Validation')) {
                     status = `<div class="font-bold text-blue-600">${status}</div>`;
                 }
-                document.getElementById('training-status').innerHTML = status;
+                document.getElementById(`training-status-${stats.model_name}`).innerHTML = status;
             }
 
             function updateProgress(stats) {
-                document.getElementById('training-progress').innerHTML = `
+                document.getElementById(`training-progress-${stats.model_name}`).innerHTML = `
                     <div class="w-full bg-gray-200 rounded-full h-2.5">
                         <div class="bg-blue-600 h-2.5 rounded-full transition-all" 
                              style="width: ${stats.progress}%"></div>
@@ -207,7 +196,7 @@ def training_stats_component():
             }
 
             function updateStats(stats) {
-                document.getElementById('training-stats').innerHTML = `
+                document.getElementById(`training-stats-${stats.model_name}`).innerHTML = `
                     <div class="stat-box">
                         <div class="font-bold text-sm text-gray-600">Current Loss</div>
                         <div class="text-lg">${stats.loss.toFixed(4)}</div>
@@ -227,33 +216,31 @@ def training_stats_component():
                 `;
             }
 
-            function updateChart(losses) {
-                if (!lossChart) {
-                    console.warn('Chart not initialized, initializing now...');
-                    initChart();
-                }
-                try {
-                    if (Array.isArray(losses)) {
-                        const currentLoss = losses[losses.length - 1]; // Get the latest loss
-                        const suggestedMax = currentLoss * 4;
-                        
-                        lossChart.data.labels = [...Array(losses.length).keys()];
-                        lossChart.data.datasets[0].data = losses;
-                        lossChart.options.scales.y.max = suggestedMax;
-                        lossChart.update('none'); // Disable animation for smoother updates
-                    } else {
-                        console.warn('Losses data is not an array:', losses);
-                    }
-                } catch (error) {
-                    console.error('Error updating chart:', error);
+            function updateChart(modelName, losses) {
+                const chart = charts[modelName];
+                if (Array.isArray(losses)) {
+                    const currentLoss = losses[losses.length - 1];
+                    const suggestedMax = currentLoss * 4;
+                    
+                    chart.data.labels = [...Array(losses.length).keys()];
+                    chart.data.datasets[0].data = losses;
+                    chart.options.scales.y.max = suggestedMax;
+                    chart.update('none');
                 }
             }
 
-            // Initialize chart and set up SSE connection when DOM loads
+            function updateLayout() {
+                const activeModels = Object.keys(charts).length;
+                const container = document.getElementById('charts-container');
+                container.className = `grid gap-6 ${
+                    activeModels === 1 ? 'grid-cols-1' : 
+                    activeModels === 2 ? 'grid-cols-2' : 
+                    'grid-cols-3'
+                }`;
+            }
+
             document.addEventListener('DOMContentLoaded', function() {
                 console.log('Setting up SSE connection...');
-                initChart();
-                
                 const evtSource = new EventSource('/training-stats');
                 
                 evtSource.onopen = function() {
@@ -261,18 +248,23 @@ def training_stats_component():
                 };
                 
                 evtSource.onmessage = function(event) {
-                    console.log('SSE message received:', event.data);
                     const stats = JSON.parse(event.data);
+                    const modelName = stats.model_name;
+                    
+                    // Create chart container if it doesn't exist
+                    if (!document.getElementById(`loss-graph-${modelName}`)) {
+                        document.getElementById('charts-container').insertAdjacentHTML(
+                            'beforeend', 
+                            createChartContainer(modelName)
+                        );
+                        initChart(modelName);
+                        updateLayout();
+                    }
+                    
                     updateStatus(stats);
                     updateProgress(stats);
                     updateStats(stats);
-                    if (lossChart) {
-                        updateChart(stats.losses);
-                    } else {
-                        console.warn('Chart not initialized yet');
-                        initChart();
-                        updateChart(stats.losses);
-                    }
+                    updateChart(modelName, stats.losses);
                 };
                 
                 evtSource.onerror = function(err) {
@@ -286,6 +278,11 @@ def training_stats_component():
                 background-color: #f3f4f6;
                 border-radius: 0.5rem;
                 box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            }
+            .chart-wrapper {
+                background: white;
+                border-radius: 0.5rem;
+                overflow: hidden;
             }
         """)
     )
