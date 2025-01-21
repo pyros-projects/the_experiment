@@ -81,7 +81,7 @@ def get():
                     ]
                 ),
             ),
-            Grid(cls="grid-cols-2 flex-auto flex-nowrap place-content-start w-[38%]")(
+            Div(cls="flex h-screen bg-gray-100")(
                 Nav(hx_target='#main-area', cls='w-64 h-auto bg-white border-r border-gray-200 p-4 overflow-y-auto')(
                     Sl_menu(
                         menu('play-circle', 'Rules Playground', '/rules'),
@@ -91,7 +91,7 @@ def get():
                         menu('diagram-3', 'Weight Watcher', '/weights'),
                     ), 
                 ),
-                Div(id='main-area')(RulesPlaygroundView(rt)),)
+                Div(id='main-area',cls="flex-1 overflow-auto p-6")(RulesPlaygroundView(rt)),)
         ),
     )
 
