@@ -37,6 +37,8 @@ hdrs = (
                 Script(src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.19.1/cdn/shoelace.js",type="module"),
                 Script(src="https://cdn.plot.ly/plotly-2.24.1.min.js"),
                 Theme.slate.headers(highlightjs=True,mode='light'),
+                Script(src="https://cdn.plot.ly/plotly-2.24.1.min.js"),
+                Script(src="https://unpkg.com/htmx.org/dist/ext/sse.js"),
         )
 
 app = fast_app(hdrs=hdrs,pico=False,default_hdrs=True,live=True,title="The Experiment")

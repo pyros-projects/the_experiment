@@ -4,7 +4,7 @@ from fasthtml.common import *
 from devtools import debug
 from the_experiment.dataset import int2bool
 from the_experiment.comparison.model_eval import ModelEvaluator
-from the_experiment.state.state import MODEL_EVALUATOR
+from the_experiment.comparison.model_eval import MODEL_EVALUATOR
 
 
 def boolean_circle(value: bool, name: str, onclick: str,htmx_target="#main-content"):

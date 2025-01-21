@@ -13,7 +13,7 @@ from the_experiment.modules.dataset_view import DatasetView
 from the_experiment.modules.heatmap import WeightHeatmap
 from the_experiment.modules.train_view import TrainView
 from the_experiment.rules.rules import prompt_to_completion
-from the_experiment.state.state import MODEL_EVALUATOR
+from the_experiment.comparison.model_eval import MODEL_EVALUATOR
 from the_experiment.train_small_causal_model import training
 from the_experiment.comparison.train_rnn import training_rnn
 from the_experiment.comparison.train_cnn import training_cnn
@@ -35,7 +35,7 @@ def get():
         folder = folders[0].folder
         debug(f"Loaded folder: {folder}")
     #return CalculatorView(rt)
-    return Body(
+    return (Title("The Experiment"),Body(
                 DivHStacked(cls="text-background bg-primary")(
                     Div(
                         H1("The Experiment",cls="m-auto text-background bg-primary pl-3"),
@@ -61,7 +61,7 @@ def get():
                 Sl_tab_panel(TrainView(rt), name='train'),
                 Sl_tab_panel(WeightHeatmap(rt), name='heatmaps'),
             ),
-        )
+        ))
     
 @rt("/icon/{icon}")
 def get(icon:str):
@@ -69,7 +69,7 @@ def get(icon:str):
         return f.read()
 
 
-
+serve()
 def main() -> None:
     parser = argparse.ArgumentParser(description='Sequence handling script')
     

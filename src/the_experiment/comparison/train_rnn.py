@@ -119,7 +119,7 @@ def validate_model(
     finally:
         model.train()
 
-def training_rnn(folder):
+def training_rnn(folder, callback=None):
     """
     Main training function for the RNN language model.
     """

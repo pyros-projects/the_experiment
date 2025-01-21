@@ -5,6 +5,8 @@ import numpy as np
 import plotly.express as px
 import json
 
+from the_experiment.comparison.model_eval import MODEL_EVALUATOR
+
 
 
 def get_layer_weights(model,layer_idx=0, component="mlp"):
@@ -151,9 +153,9 @@ def WeightHeatmap(rt):
     
     
     # Load model
-    MODEL_PATH = "./out/all/tiny-gpt2-causal/final"
+
     try:
-        model = GPT2LMHeadModel.from_pretrained(MODEL_PATH)
+        model = MODEL_EVALUATOR.model
         model.eval()
     except Exception as e:
         model = None

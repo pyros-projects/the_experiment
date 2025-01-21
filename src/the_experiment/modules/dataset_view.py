@@ -4,8 +4,7 @@ from fasthtml.components import Sl_tab_group,Sl_tab,Sl_tab_panel,Sl_checkbox, Sl
 from monsterui.all import *
 from the_experiment.components.calculator_components import InputGrid
 from the_experiment.modules.calculator_view import BooleanState, calculate_new_state
-
-
+from the_experiment.components.dataset_list import tasks_homepage
 
 
 
@@ -25,14 +24,11 @@ def render_menu():
 def render_horizontal_components(components):
     return Ul(*[DivHStacked(Li(component)) for component in components], 
            cls='space-y-4'),
-
-
-
-def render_state(state: BooleanState):
-    new_A, new_B, new_C, new_D, old_sum, new_sum = calculate_new_state(state)
-    return Grid(id="dataset-main")(
-                
-                Sl_split_panel(position="10")(Div(render_menu(),slot="start"),Div(slot="end")(Sl_card(
+    
+    
+    
+def remove_sequences(state):
+    return Sl_card(
                     Div(Strong("Remove sequences"),slot="header"),
                     Div(cls=" grid grid-cols-1 w-[500px]")(
                         Div(
@@ -41,9 +37,25 @@ def render_state(state: BooleanState):
                         ),
                         Sl_button("Add to removed sequences",cls="mt-4")
                     )
-                )))
-                    
                 )
+    
+def split_panel_1(state):
+    return Sl_split_panel(position="30")(
+                    Div(render_menu(),slot="start"),
+                    Div(slot="end")(
+                        remove_sequences(state)
+                    ))
+
+
+
+def render_state(state: BooleanState):
+    new_A, new_B, new_C, new_D, old_sum, new_sum = calculate_new_state(state)
+    return Grid(id="dataset-main")(
+                Sl_split_panel(position="50")(Div(split_panel_1(state),slot="start"),Div(slot="end")(
+                        tasks_homepage
+                    ))
+                    
+            )
 
 
 def DatasetView(rt):

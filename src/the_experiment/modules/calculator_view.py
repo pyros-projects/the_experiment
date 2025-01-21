@@ -4,7 +4,7 @@ from monsterui.all import *
 from fasthtml.components import Sl_card,Sl_tab,Sl_tab_panel,Sl_checkbox, Sl_button
 from the_experiment.components.calculator_components import CnnOutputGrid, InputGrid, OutputGrid, ModelOutputGrid,RnnOutputGrid
 from the_experiment.rules.rules import RULES
-from the_experiment.state.state import MODEL_EVALUATOR
+from the_experiment.comparison.model_eval import MODEL_EVALUATOR
 
 
 

@@ -21,6 +21,7 @@ dependencies = [
     "pywebview>=5.3.2",
     "scikit-learn>=1.6.1",
     "seaborn>=0.13.2",
+    "sse-starlette>=2.2.1",
     "torch>=2.5.1",
     "torchvision>=0.20.1",
     "transformers[torch]>=4.48.0",

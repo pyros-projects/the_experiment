@@ -5,15 +5,21 @@ from typing import List, Dict, Optional, Tuple
 from devtools import debug
 
 class ModelEvaluator:
-    def __init__(self,folder_contents: List[FolderContents]):
-        self.folder_contents = folder_contents
+    def __init__(self):
+        self.folder_contents = check_out_folder()
         self.active_folder = None
+        
         if len(self.folder_contents) > 0:
             self.active_folder = self.folder_contents[0].folder
             self.reload_models(self.folder_contents[0].folder)
             
 
     def reload_models(self,folder):
+        self.folder_contents = check_out_folder()
+        if folder not in [f.folder for f in self.folder_contents]:
+            self.active_folder = self.folder_contents[0].folder
+        else:
+            self.active_folder = folder
         loader = load_models(folder)
         if not loader:
             self.model = None
@@ -158,4 +164,5 @@ class ModelEvaluator:
         return self.eval_model(prompt)
     
     
-#MODEL_EVALUATOR = ModelEvaluator("test")
+
+MODEL_EVALUATOR:ModelEvaluator = ModelEvaluator()

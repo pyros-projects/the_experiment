@@ -1,4 +1,5 @@
 import json
+import threading
 import torch
 import os
 from datasets import load_dataset, Dataset
@@ -13,6 +14,8 @@ from loguru import logger
 import sys
 from typing import List, Dict, Any
 from pathlib import Path
+
+from the_experiment.utils.callbacks import ProgressCallback
 
 
 # Configure loguru
@@ -140,11 +143,13 @@ def setup_training_environment(output_dir: str) -> None:
     else:
         logger.warning("No GPU available, using CPU")
 
-def training(folder):
+def training(folder, callback=None):
     try:
         # Setup training environment
         output_dir = f"./out/{folder}/tiny-gpt2-causal"
         setup_training_environment(output_dir)
+        
+       
         
         # 1. Load data
         logger.info("Starting data loading process")
@@ -209,6 +214,7 @@ def training(folder):
         training_args = TrainingArguments(
             output_dir=output_dir,
             overwrite_output_dir=True,
+            max_steps=3750,
             num_train_epochs=3,
             per_device_train_batch_size=16,
             per_device_eval_batch_size=16,
@@ -220,34 +226,55 @@ def training(folder):
         )
 
         # 8. Initialize Trainer
+        callbacks = [callback] if callback else []
         logger.info("Initializing trainer")
         trainer = Trainer(
             model=model,
             args=training_args,
             train_dataset=train_dataset,
             eval_dataset=valid_dataset,
+            callbacks=callbacks
         )
+        
+        if not any(isinstance(cb, ProgressCallback) for cb in trainer.callback_handler.callbacks):
+            trainer.add_callback(ProgressCallback())
+            
+            
+        th = threading.Thread(target=training_llm_in_background, args=(trainer,valid_dataset,output_dir,tokenizer), daemon=True)
+        th.start()
+        
+        
 
+    except Exception as e:
+        logger.exception(f"Training failed with error: {str(e)}")
+        raise
+    
+    
+def training_llm_in_background(trainer: Trainer,valid_dataset,output_dir,tokenizer):
+    """
+    Runs `trainer.train()` in a background thread. 
+    """
+    try:
+    
+        
         # 9. Train
-        logger.info("Starting training")
-        trainer.train()
-        logger.success("Training completed")
 
+        trainer.train()
+    
         # 10. Evaluate
-        logger.info("Starting evaluation")
         eval_result = trainer.evaluate(eval_dataset=valid_dataset)
         perplexity = torch.exp(torch.tensor(eval_result["eval_loss"]))
         logger.info(f"Validation Perplexity: {perplexity:.2f}")
-
-        # 11. Save final model
-
+        
+        
         logger.info("Saving model and tokenizer")
         final_output_dir = f"{output_dir}/final"
         trainer.save_model(final_output_dir)
         tokenizer.save_pretrained(final_output_dir)
         logger.success(f"Model and tokenizer saved to {final_output_dir}")
+        logger.info("LLM training thread: finished")
 
+        
     except Exception as e:
-        logger.exception(f"Training failed with error: {str(e)}")
-        raise
+        logger.exception(f"Training LLM failed: {e}")
 
