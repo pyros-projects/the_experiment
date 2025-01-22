@@ -7,6 +7,21 @@ import asyncio
 from queue import Queue
 from threading import Lock
 
+@dataclass
+class ChartConfig:
+    """Configuration for a training chart"""
+    model_name: str
+    class_name: str  # For color and style
+    color_main: str
+    color_bg: str
+
+CHART_CONFIGS = {
+    'LLM': ChartConfig('LLM', 'bg-blue-600', 'rgb(59, 130, 246)', 'rgba(59, 130, 246, 0.1)'),
+    'RNN': ChartConfig('RNN', 'bg-green-600', 'rgb(16, 185, 129)', 'rgba(16, 185, 129, 0.1)'),
+    'CNN': ChartConfig('CNN', 'bg-red-600', 'rgb(239, 68, 68)', 'rgba(239, 68, 68, 0.1)')
+}
+
+
 
 @dataclass
 class TrainingStats:
@@ -122,8 +137,8 @@ monitor = TrainingMonitor()
 
 def training_stats_component():
     """Returns the HTML component for displaying training stats"""
-    return Card(cls="p-2 w-full")(  # Reduced padding
-        Div(id="charts-container", cls="grid gap-4"),  # Reduced gap
+    return Card(cls="p-2 w-full")(
+        Div(id="charts-container", cls="grid gap-4"),
         Script(src="https://cdn.jsdelivr.net/npm/chart.js"),
         Script("""
             const charts = {};
@@ -131,7 +146,9 @@ def training_stats_component():
 
             function createChartContainer(modelName) {
                 return `
-                    <div class="chart-wrapper p-3 bg-white rounded-lg shadow-lg">
+                    <div class="chart-wrapper p-3 bg-white rounded-lg shadow-lg transition-all duration-300" 
+                        data-model="${modelName}" 
+                        onclick="toggleChartFocus('${modelName}')">
                         <div class="flex justify-between items-center mb-2">
                             <div class="font-bold text-lg">${modelName}</div>
                             <div id="training-status-${modelName}" class="text-sm"></div>
@@ -141,12 +158,12 @@ def training_stats_component():
                         
                         <div class="flex gap-4">
                             <div id="training-stats-${modelName}" 
-                                 class="flex flex-col gap-2 w-[160px]">
+                                class="flex flex-col gap-2 w-[160px]">
                             </div>
                             
-                            <div class="flex-grow h-[220px]">
+                            <div class="flex-grow chart-height">
                                 <canvas id="loss-graph-${modelName}" 
-                                      class="w-full h-full">
+                                    class="w-full h-full">
                                 </canvas>
                             </div>
                         </div>
@@ -154,63 +171,93 @@ def training_stats_component():
                 `;
             }
 
-            function initChart(modelName) {
-                if (!charts[modelName]) {
-                    const ctx = document.getElementById(`loss-graph-${modelName}`).getContext('2d');
-                    charts[modelName] = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: [],
-                            datasets: [{
-                                label: 'Loss',
-                                data: [],
-                                borderColor: modelName === 'LLM' ? 'rgb(59, 130, 246)' : // Blue
-                                           modelName === 'RNN' ? 'rgb(16, 185, 129)' :   // Green
-                                           'rgb(239, 68, 68)',                           // Red for CNN
-                                backgroundColor: modelName === 'LLM' ? 'rgba(59, 130, 246, 0.1)' :
-                                               modelName === 'RNN' ? 'rgba(16, 185, 129, 0.1)' :
-                                               'rgba(239, 68, 68, 0.1)',
-                                tension: 0.3,
-                                fill: true
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            animation: { duration: 150 },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    title: { display: false },
-                                    grid: { display: true, color: 'rgba(0,0,0,0.05)' }
-                                },
-                                x: {
-                                    title: { display: false },
-                                    grid: { display: false }
-                                }
-                            },
-                            plugins: {
-                                legend: { display: false }
-                            }
-                        }
-                    });
+            let focusedModel = null;
+               
+            function toggleChartFocus(modelName) {
+                const container = document.getElementById('charts-container');
+                if (!container) return;
+
+                // If clicking the already focused model, unfocus it
+                if (focusedModel === modelName) {
+                    focusedModel = null;
+                } else {
+                    focusedModel = modelName;
                 }
+                
+                updateLayout();
+                
+                // Trigger a resize event to make charts redraw
+                window.dispatchEvent(new Event('resize'));
+            }
+               
+            function initChart(modelName) {
+                if (charts[modelName]) {
+                    charts[modelName].destroy();
+                }
+                
+                const canvas = document.getElementById(`loss-graph-${modelName}`);
+                if (!canvas) return;
+                
+                const ctx = canvas.getContext('2d');
+                charts[modelName] = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Loss',
+                            data: [],
+                            borderColor: modelName === 'LLM' ? 'rgb(59, 130, 246)' :
+                                       modelName === 'RNN' ? 'rgb(16, 185, 129)' :
+                                       'rgb(239, 68, 68)',
+                            backgroundColor: modelName === 'LLM' ? 'rgba(59, 130, 246, 0.1)' :
+                                           modelName === 'RNN' ? 'rgba(16, 185, 129, 0.1)' :
+                                           'rgba(239, 68, 68, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: { duration: 150 },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: { display: false },
+                                grid: { display: true, color: 'rgba(0,0,0,0.05)' }
+                            },
+                            x: {
+                                title: { display: false },
+                                grid: { display: false }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
             }
 
             function updateStatus(stats) {
+                const statusEl = document.getElementById(`training-status-${stats.model_name}`);
+                if (!statusEl) return;
+                
                 let status = stats.status;
                 if (stats.status.includes('Validation')) {
                     status = `<span class="font-bold text-blue-600">${status}</span>`;
                 }
-                document.getElementById(`training-status-${stats.model_name}`).innerHTML = status;
+                statusEl.innerHTML = status;
             }
 
             function updateProgress(stats) {
+                const progressEl = document.getElementById(`training-progress-${stats.model_name}`);
+                if (!progressEl) return;
+                
                 const color = stats.model_name === 'LLM' ? 'bg-blue-600' :
                              stats.model_name === 'RNN' ? 'bg-green-600' :
                              'bg-red-600';
                              
-                document.getElementById(`training-progress-${stats.model_name}`).innerHTML = `
+                progressEl.innerHTML = `
                     <div class="w-full bg-gray-100 rounded-full h-1.5">
                         <div class="${color} h-1.5 rounded-full transition-all" 
                              style="width: ${stats.progress}%"></div>
@@ -222,7 +269,10 @@ def training_stats_component():
             }
 
             function updateStats(stats) {
-                document.getElementById(`training-stats-${stats.model_name}`).innerHTML = `
+                const statsEl = document.getElementById(`training-stats-${stats.model_name}`);
+                if (!statsEl) return;
+                
+                statsEl.innerHTML = `
                     <div class="stat-box">
                         <div class="text-xs text-gray-600">Loss</div>
                         <div class="font-bold">${stats.loss.toFixed(4)}</div>
@@ -240,41 +290,107 @@ def training_stats_component():
 
             function updateChart(modelName, losses) {
                 const chart = charts[modelName];
-                if (Array.isArray(losses)) {
-                    const currentLoss = losses[losses.length - 1];
-                    const suggestedMax = currentLoss * 2;  // Reduced multiplier for tighter y-axis
-                    
-                    chart.data.labels = [...Array(losses.length).keys()];
-                    chart.data.datasets[0].data = losses;
-                    chart.options.scales.y.max = suggestedMax;
-                    chart.update('none');
-                }
+                if (!chart || !Array.isArray(losses)) return;
+                
+                const currentLoss = losses[losses.length - 1];
+                const suggestedMax = currentLoss * 2;
+                
+                chart.data.labels = [...Array(losses.length).keys()];
+                chart.data.datasets[0].data = losses;
+                chart.options.scales.y.max = suggestedMax;
+                chart.update('none');
             }
 
             function updateLayout() {
                 const activeModels = Object.keys(charts).length;
                 const container = document.getElementById('charts-container');
-                container.className = `grid gap-4 ${
-                    activeModels === 1 ? 'grid-cols-1' : 
-                    activeModels === 2 ? 'grid-cols-2' : 
-                    'grid-cols-3'
-                }`;
+                if (!container) return;
+
+                if (activeModels === 1) {
+                    // Single chart layout
+                    container.className = 'grid gap-4 grid-cols-1';
+                    const wrapper = container.querySelector('.chart-wrapper');
+                    if (wrapper) {
+                        wrapper.className = 'chart-wrapper p-3 bg-white rounded-lg shadow-lg col-span-full w-full transition-all duration-300';
+                        const chartContainer = wrapper.querySelector('.flex-grow');
+                        if (chartContainer) {
+                            chartContainer.className = 'flex-grow h-[400px]';
+                        }
+                    }
+                } else if (activeModels > 1 && focusedModel) {
+                    // Focused layout
+                    container.className = 'grid gap-4 grid-cols-4';
+                    
+                    container.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+                        const modelName = wrapper.getAttribute('data-model');
+                        if (modelName === focusedModel) {
+                            wrapper.className = 'chart-wrapper p-3 bg-white rounded-lg shadow-lg col-span-3 cursor-pointer transition-all duration-300 hover:shadow-xl';
+                            const chartContainer = wrapper.querySelector('.flex-grow');
+                            if (chartContainer) {
+                                chartContainer.className = 'flex-grow h-[400px]';
+                            }
+                        } else {
+                            wrapper.className = 'chart-wrapper p-3 bg-white rounded-lg shadow-lg col-span-1 cursor-pointer transition-all duration-300 hover:shadow-xl';
+                            const chartContainer = wrapper.querySelector('.flex-grow');
+                            if (chartContainer) {
+                                chartContainer.className = 'flex-grow h-[200px]';
+                            }
+                        }
+                    });
+                } else {
+                    // Default grid layout
+                    container.className = `grid gap-4 ${
+                        activeModels === 2 ? 'grid-cols-2' : 'grid-cols-3'
+                    }`;
+                    container.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+                        wrapper.className = 'chart-wrapper p-3 bg-white rounded-lg shadow-lg cursor-pointer transition-all duration-300 hover:shadow-xl';
+                        const chartContainer = wrapper.querySelector('.flex-grow');
+                        if (chartContainer) {
+                            chartContainer.className = 'flex-grow h-[220px]';
+                        }
+                    });
+                }
+                
+                // Update all charts to fit their new containers
+                Object.values(charts).forEach(chart => chart.resize());
             }
 
-            document.addEventListener('DOMContentLoaded', function() {
-                const evtSource = new EventSource('/training-stats');
+            // Clean up existing SSE connection if it exists
+            function cleanupMonitor() {
+                if (window.trainingEventSource) {
+                    window.trainingEventSource.close();
+                    window.trainingEventSource = null;
+                }
                 
-                evtSource.onmessage = function(event) {
+                Object.values(charts).forEach(chart => {
+                    if (chart) chart.destroy();
+                });
+                Object.keys(charts).forEach(key => delete charts[key]);
+            }
+
+            function initializeTrainingMonitor() {
+                console.log('Initializing training monitor...');
+                
+                cleanupMonitor();
+                
+                window.trainingEventSource = new EventSource('/training-stats');
+                
+                window.trainingEventSource.onopen = function() {
+                    console.log('SSE connection opened');
+                };
+                
+                window.trainingEventSource.onmessage = function(event) {
+                    console.log('SSE message received:', event.data);
                     const stats = JSON.parse(event.data);
                     const modelName = stats.model_name;
                     
                     if (!document.getElementById(`loss-graph-${modelName}`)) {
-                        document.getElementById('charts-container').insertAdjacentHTML(
-                            'beforeend', 
-                            createChartContainer(modelName)
-                        );
-                        initChart(modelName);
-                        updateLayout();
+                        const container = document.getElementById('charts-container');
+                        if (container) {
+                            container.insertAdjacentHTML('beforeend', createChartContainer(modelName));
+                            initChart(modelName);
+                            updateLayout();
+                        }
                     }
                     
                     updateStatus(stats);
@@ -282,7 +398,31 @@ def training_stats_component():
                     updateStats(stats);
                     updateChart(modelName, stats.losses);
                 };
+                
+                window.trainingEventSource.onerror = function(err) {
+                    console.error('SSE Error:', err);
+                    cleanupMonitor();
+                };
+            }
+
+            // Listen for HTMX page swaps
+            document.addEventListener('htmx:afterSwap', function(evt) {
+                if (evt.detail.target.id === 'main-area') {
+                    const hasTrainingMonitor = document.getElementById('charts-container');
+                    if (hasTrainingMonitor) {
+                        console.log('Training view loaded, initializing monitor...');
+                        initializeTrainingMonitor();
+                    } else {
+                        console.log('Not training view, cleaning up monitor...');
+                        cleanupMonitor();
+                    }
+                }
             });
+
+            // Initial setup
+            if (document.getElementById('charts-container')) {
+                initializeTrainingMonitor();
+            }
         """),
         Style("""
             .stat-box {
@@ -294,6 +434,14 @@ def training_stats_component():
                 background: white;
                 border-radius: 0.5rem;
                 overflow: hidden;
+                cursor: pointer;
+                transition: all 0.3s ease-in-out;
             }
-        """),
+            .chart-wrapper:hover {
+                transform: translateY(-2px);
+            }
+            .chart-height {
+                transition: height 0.3s ease-in-out;
+            }
+        """)
     )
