@@ -1,5 +1,6 @@
 # file: train_cnn.py
 
+import threading
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -12,6 +13,7 @@ from loguru import logger
 import time
 from tqdm import tqdm
 
+from the_experiment.models.cnn.cnn_monitor import CNNTrainingMonitor
 from the_experiment.models.load_data import MiniworldTextDataset
 from the_experiment.models.cnn.cnn_lm import CNNLanguageModel
 
@@ -205,70 +207,122 @@ def training_cnn(folder, callback=None):
         optimizer = optim.Adam(model.parameters(), lr=1e-3)
         epochs = 3
         best_val_loss = float("inf")
+        
+        callbacks = [callback] if callback else []
+        th = threading.Thread(
+            target=background_thread,
+            args=(
+                callbacks,
+                epochs,
+                model,
+                train_loader,
+                device,
+                vocab_size,
+                criterion,
+                optimizer,
+                best_val_loss,
+                out_dir,
+                valid_loader,
+                start_time,
+            ),
+            daemon=True,
+        )
+        th.start()
+    except Exception as e:
+        logger.exception(f"Training failed with error: {str(e)}")
+        raise
 
+    
+    
+
+def background_thread(
+    callbacks,
+    epochs,
+    model,
+    train_loader,
+    device,
+    vocab_size,
+    criterion,
+    optimizer,
+    best_val_loss,
+    out_dir,
+    valid_loader,
+    start_time,
+):
+    # Initialize monitor
+    total_batches = len(train_loader) * epochs
+    monitor = CNNTrainingMonitor(
+        callbacks[0] if callbacks else None, total_batches, epochs
+    )
+
+    # Signal training start
+    monitor.on_train_begin()
+    
+    
         # Training loop
-        logger.info("Starting training")
-        for epoch in range(epochs):
-            epoch_start_time = time.time()
-            total_loss = 0.0
-            model.train()
+    logger.info("Starting training")
+    for epoch in range(epochs):
+        epoch_start_time = time.time()
+        total_loss = 0.0
+        model.train()
+        monitor.on_epoch_begin(epoch)
+        # Training epoch
+        for batch_idx, (input_ids, attention_mask) in enumerate(
+            tqdm(train_loader, desc=f"Epoch {epoch + 1}/{epochs}")
+        ):
+            try:
+                input_ids = input_ids.to(device)
+                attention_mask = attention_mask.to(device)
 
-            # Training epoch
-            for batch_idx, (input_ids, attention_mask) in enumerate(
-                tqdm(train_loader, desc=f"Epoch {epoch + 1}/{epochs}")
-            ):
-                try:
-                    input_ids = input_ids.to(device)
-                    attention_mask = attention_mask.to(device)
+                # Forward pass
+                logits = model(input_ids)
 
-                    # Forward pass
-                    logits = model(input_ids)
+                # Compute loss
+                loss = compute_loss(logits, input_ids, attention_mask, criterion)
 
-                    # Compute loss
-                    loss = compute_loss(logits, input_ids, attention_mask, criterion)
+                # Backward pass
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
 
-                    # Backward pass
-                    optimizer.zero_grad()
-                    loss.backward()
-                    optimizer.step()
+                total_loss += loss.item()
+                # Report batch progress
+                monitor.on_batch_end(batch_idx, loss.item())
+                if batch_idx % 100 == 0:
+                    logger.debug(
+                        f"Epoch {epoch + 1}, Batch {batch_idx}/{len(train_loader)}, Loss: {loss.item():.4f}"
+                    )
 
-                    total_loss += loss.item()
+            except Exception as e:
+                logger.error(f"Error in training batch {batch_idx}: {str(e)}")
+                continue
 
-                    if batch_idx % 100 == 0:
-                        logger.debug(
-                            f"Epoch {epoch + 1}, Batch {batch_idx}/{len(train_loader)}, Loss: {loss.item():.4f}"
-                        )
+        # Epoch statistics
+        avg_loss = total_loss / len(train_loader)
+        epoch_time = time.time() - epoch_start_time
+        logger.info(f"Epoch {epoch + 1}/{epochs} complete:")
+        logger.info(f"Average Loss: {avg_loss:.4f}")
+        logger.info(f"Epoch Time: {epoch_time:.2f}s")
 
-                except Exception as e:
-                    logger.error(f"Error in training batch {batch_idx}: {str(e)}")
-                    continue
-
-            # Epoch statistics
-            avg_loss = total_loss / len(train_loader)
-            epoch_time = time.time() - epoch_start_time
-            logger.info(f"Epoch {epoch + 1}/{epochs} complete:")
-            logger.info(f"Average Loss: {avg_loss:.4f}")
-            logger.info(f"Epoch Time: {epoch_time:.2f}s")
-
-            # Validation
-            val_loss = validate_model(model, valid_loader, criterion, device)
-
-            # Save best model
-            if val_loss < best_val_loss:
-                best_val_loss = val_loss
-                logger.info("New best validation loss! Saving model checkpoint...")
-                torch.save(
-                    {
-                        "epoch": epoch,
-                        "model_state_dict": model.state_dict(),
-                        "optimizer_state_dict": optimizer.state_dict(),
-                        "train_loss": avg_loss,
-                        "val_loss": val_loss,
-                    },
-                    f"./{out_dir}/cnn_lm_best.pt",
-                )
-
-        # Save final model
+        # Validation
+        val_loss = validate_model(model, valid_loader, criterion, device)
+        monitor.on_validation_end(val_loss)
+        # Save best model
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            logger.info("New best validation loss! Saving model checkpoint...")
+            torch.save(
+                {
+                    "epoch": epoch,
+                    "model_state_dict": model.state_dict(),
+                    "optimizer_state_dict": optimizer.state_dict(),
+                    "train_loss": avg_loss,
+                    "val_loss": val_loss,
+                },
+                f"./{out_dir}/cnn_lm_best.pt",
+            )
+        monitor.on_train_end(avg_loss)
+            # Save final model
         logger.info("Saving final model")
         try:
             torch.save(model.state_dict(), f"./{out_dir}/cnn_lm_final.pt")
@@ -282,6 +336,4 @@ def training_cnn(folder, callback=None):
         logger.success(f"Training completed in {total_time:.2f}s")
         logger.success(f"Best validation loss: {best_val_loss:.4f}")
 
-    except Exception as e:
-        logger.exception(f"Training failed with error: {str(e)}")
-        raise
+

@@ -189,7 +189,7 @@ def training_rnn(folder, callback=None):
 
         callbacks = [callback] if callback else []
         th = threading.Thread(
-            target=background_thread,
+            target=background_rnn_thread,
             args=(
                 callbacks,
                 epochs,
@@ -213,7 +213,7 @@ def training_rnn(folder, callback=None):
         raise
 
 
-def background_thread(
+def background_rnn_thread(
     callbacks,
     epochs,
     model,
