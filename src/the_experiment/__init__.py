@@ -243,18 +243,20 @@ def main() -> None:
             call_generate_dataset()
 
 
+def call_generate_dataset(to_omit_list=None) -> None:
+    from the_experiment.models.dataset import generate_dataset
+
+    random.seed(42)
+    generate_dataset(20000, "dataset/train.jsonl", to_omit_list)
+    generate_dataset(2000, "dataset/valid.jsonl", to_omit_list)
+    generate_dataset(2000, "dataset/test.jsonl", to_omit_list)
+
+
 def parse_sequences(seq_str):
     """Parse multiple sequences separated by semicolon."""
     if not seq_str:
         return None
     return seq_str.split(";")
-
-
-def call_generate_dataset(to_omit_list=None) -> None:
-    random.seed(42)
-    generate_dataset(20000, "dataset/train.jsonl", to_omit_list)
-    generate_dataset(2000, "dataset/valid.jsonl", to_omit_list)
-    generate_dataset(2000, "dataset/test.jsonl", to_omit_list)
 
 
 def call_test(folder, prompt_text: str) -> dict:

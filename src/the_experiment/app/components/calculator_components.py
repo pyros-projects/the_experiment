@@ -8,7 +8,7 @@ def boolean_circle(value: bool, name: str, onclick: str, htmx_target="#main-cont
     color = "bg-blue-500" if value else "bg-gray-200"
     text_color = "text-white" if value else "text-gray-800"
     return Div(
-        value and "1" or "0",
+        (value and "1") or "0",
         cls=f"rounded-full w-12 h-12 flex items-center justify-center cursor-pointer {color} {text_color}",
         hx_post=onclick,
         hx_target=htmx_target,
@@ -24,9 +24,9 @@ def boolean_row(label: str, value: bool, onclick: str = None):
     )
 
 
-def InputGrid(A, B, C, D, E, htmx_path="/toggle", htmx_target="#main-content"):
+def InputGrid(A, B, C, D, E, htmx_path="/toggle", htmx_target="#main-content", size="70"):
     cls = "justify-items-center"
-    return Div(cls="grid grid-cols-5 gap-2 w-[70%]")(
+    return Div(cls=f"grid grid-cols-5 gap-2 w-[{size}%]")(
         Div(H1("A"), cls=cls),
         Div(H1("B"), cls=cls),
         Div(H1("C"), cls=cls),

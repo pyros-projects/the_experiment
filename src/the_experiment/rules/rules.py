@@ -47,8 +47,6 @@ def prompt_to_completion(input_text: str) -> dict:
     new_sum = new_B + new_C + new_D + new_A
 
     text_before = f"{a},{b},{c},{d},{e}"
-    text_after = (
-        f"\n{new_A_str},{new_B_str},{new_C_str},{new_D_str}\n{old_sum} - {new_sum}\n"
-    )
+    text_after = f"\n{new_A_str},{new_B_str},{new_C_str},{new_D_str}\n{old_sum} - {new_sum}\n"
 
     return {"prompt": text_before, "completion": text_after}
