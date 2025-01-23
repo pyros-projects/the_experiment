@@ -1,11 +1,26 @@
 {
-    "cSpell.words": [
-        "matplotlib",
-        "monsterui",
-        "numpy",
-        "plotly",
-        "pywebview",
-        "scikit",
-        "seaborn"
-    ]
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    
+
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports.ruff": "always",
+        "source.fixAll.ruff": "always"
+    },
+    
+    
+    "python.analysis.diagnosticSeverityOverrides": {
+      "reportGeneralTypeIssues": "none",
+      "reportOptionalMemberAccess": "none",
+      "reportWildcardImportFromLibrary": "none",
+      "reportRedeclaration": "none",
+      "reportAttributeAccessIssue": "none",
+      "reportInvalidTypeForm": "none",
+      "reportAssignmentType": "none",
+  }
 }
+

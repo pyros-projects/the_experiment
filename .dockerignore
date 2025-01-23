@@ -1,0 +1,7 @@
+.venv/
+.unixvenv/
+data/
+dist/
+docs/
+logs/
+out/

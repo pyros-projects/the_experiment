@@ -1,25 +1,27 @@
-import random
 import argparse
+import json
+import random
+
+from devtools import debug
 from fasthtml.common import *
 from fasthtml.components import (
-    Sl_tab_group,
-    Sl_tab,
-    Sl_tab_panel,
-    Sl_select,
-    Sl_option,
     Sl_icon,
     Sl_menu,
     Sl_menu_item,
+    Sl_option,
+    Sl_select,
+    Sl_tab,
+    Sl_tab_group,
+    Sl_tab_panel,
 )
-from devtools import debug
 from monsterui.all import *
 
-from the_experiment.app.modules.rules_editor_view import create_rule_editor
-from the_experiment.app.modules.shoelace_app import app as shoelace_app
-from the_experiment.app.modules.rules_playground import RulesPlaygroundView
 from the_experiment.app.modules.dataset_view import DatasetView
-from the_experiment.app.modules.weight_view import WeightView
+from the_experiment.app.modules.rules_editor_view import create_rule_editor
+from the_experiment.app.modules.rules_playground import RulesPlaygroundView
+from the_experiment.app.modules.shoelace_app import app as shoelace_app
 from the_experiment.app.modules.train_view import TrainView
+from the_experiment.app.modules.weight_view import WeightView
 from the_experiment.models.cnn.train_cnn import training_cnn
 from the_experiment.models.cnn2.train_cnn2 import training_cnn2
 from the_experiment.models.dataset import generate_dataset
@@ -28,12 +30,18 @@ from the_experiment.models.mann.train_mann import training_mann
 from the_experiment.models.model_eval import MODEL_EVALUATOR
 from the_experiment.models.rnn.train_rnn import training_rnn
 from the_experiment.rules.rules import prompt_to_completion
-
+from the_experiment.tools.sankey.sankey_chart2 import generate_sankey_diagram
+from the_experiment.tools.sankey.sankey_transformers import build_sankey
 
 app, rt = shoelace_app
 
-def icon(nm, text, **kw): return Sl_icon(slot='prefix', name=nm, **kw),P(text)
-def menu(nm, text, path): return Sl_menu_item(*icon(nm, text), cls='rounded-md mb-2', hx_get=path)
+
+def icon(nm, text, **kw):
+    return Sl_icon(slot="prefix", name=nm, **kw), P(text)
+
+
+def menu(nm, text, path):
+    return Sl_menu_item(*icon(nm, text), cls="rounded-md mb-2", hx_get=path)
 
 
 @rt("/")
@@ -65,15 +73,9 @@ def get():
                 )(
                     *[
                         Sl_option(
-                            Sl_icon(slot="suffix", src="icon/llm")
-                            if folder.has_llm
-                            else Div(),
-                            Sl_icon(slot="suffix", src="icon/rnn")
-                            if folder.has_rnn
-                            else Div(),
-                            Sl_icon(slot="suffix", src="icon/cnn")
-                            if folder.has_cnn
-                            else Div(),
+                            Sl_icon(slot="suffix", src="icon/llm") if folder.has_llm else Div(),
+                            Sl_icon(slot="suffix", src="icon/rnn") if folder.has_rnn else Div(),
+                            Sl_icon(slot="suffix", src="icon/cnn") if folder.has_cnn else Div(),
                             Strong(f"{folder.folder}"),
                             value=f"option-{i + 1}",
                         )
@@ -82,35 +84,54 @@ def get():
                 ),
             ),
             Div(cls="flex h-screen bg-gray-100")(
-                Nav(hx_target='#main-area', cls='w-64 h-auto bg-white border-r border-gray-200 p-4 overflow-y-auto')(
+                Nav(hx_target="#main-area", cls="w-64 h-auto bg-white border-r border-gray-200 overflow-y-auto")(
                     Sl_menu(
-                        menu('play-circle', 'Rules Playground', '/rules'),
-                        menu('pencil-square', 'Rules Editor', '/rules_editor'),
-                        menu('database', 'Dataset Manager', '/dataset'),
-                        menu('speedometer', 'Train', '/train'),
-                        menu('diagram-3', 'Weight Watcher', '/weights'),
-                    ), 
+                        menu("play-circle", "Rules Playground", "/rules"),
+                        menu("pencil-square", "Rules Editor", "/rules_editor"),
+                        menu("database", "Dataset Manager", "/dataset"),
+                        menu("speedometer", "Train", "/train"),
+                        menu("diagram-3", "Analyze!", "/analyze"),
+                    ),
                 ),
-                Div(id='main-area',cls="flex-1 overflow-auto p-6")(RulesPlaygroundView(rt)),)
+                Div(id="main-area", cls="flex-1 overflow-auto p-6")(RulesPlaygroundView(rt)),
+            ),
         ),
     )
 
 
+@rt("/rules")
+def get():
+    return RulesPlaygroundView(rt)
 
-@rt('/rules')
-def get(): return RulesPlaygroundView(rt)
 
-@rt('/rules_editor')
-def get(): return create_rule_editor(rt)
+@rt("/rules_editor")
+def get():
+    return create_rule_editor(rt)
 
-@rt('/dataset')
-def get(): return DatasetView(rt)
 
-@rt('/train')
-def get(): return TrainView(rt)
+@rt("/dataset")
+def get():
+    return DatasetView(rt)
 
-@rt('/weights')
-def get(): return WeightView(rt)
+
+@rt("/train")
+def get():
+    return TrainView(rt)
+
+
+# @rt("/analyze")
+# def get():
+#     return (
+#         Sl_tab_group()(
+#             # Tab headers
+#             Sl_tab("Sankeynator", slot="nav", panel="sankey"),
+#             Sl_tab("Weight Watcher", slot="nav", panel="weight"),
+#             # Tab panels
+#             Sl_tab_panel(WeightView(rt), name="sankey"),
+#             Sl_tab_panel(WeightView(rt), name="weight"),
+#         ),
+#     )
+
 
 @rt("/icon/{icon}")
 def get(icon: str):
@@ -118,16 +139,12 @@ def get(icon: str):
         return f.read()
 
 
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(description="Sequence handling script")
 
     # Create mutually exclusive group for commands
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
-        "--test", type=str, help="Test with a single sequence (format: 0,1,0,1,0)"
-    )
+    group.add_argument("--test", type=str, help="Test with a single sequence (format: 0,1,0,1,0)")
     group.add_argument("--train", type=str, help="Train the model")
     group.add_argument("--train_all", type=str, help="Train all models")
     group.add_argument("--train_rnn", type=str, help="Train a rnn for comparison")
@@ -136,6 +153,7 @@ def main() -> None:
     group.add_argument("--train_mann", type=str, help="Train a mann for comparison")
     group.add_argument("--generate", action="store_true", help="Generate sequences")
     group.add_argument("--app", action="store_true")
+    group.add_argument("--sankey", action="store_true")
 
     # Optional output parameter for generate
     parser.add_argument(
@@ -191,6 +209,30 @@ def main() -> None:
         folder = args.train_mann
         training_mann(folder)
 
+    elif args.sankey:
+        # Example usage
+        sankey_data = build_sankey(
+            model_name="gpt2",  # or any other HuggingFace model
+            prompt="The meaning of life is",
+            n_tokens=5,  # Get top 5 probable tokens at each step
+            depth=3,  # Go 3 levels deep
+        )
+
+        # Save to JSON file
+        output_path = "./data/token_probabilities.json"
+        with open(output_path, "w") as f:
+            json.dump(sankey_data, f, indent=2)
+
+        print(f"Saved Sankey diagram data to {output_path}")
+
+        generate_sankey_diagram(
+            json_path="./data/token_probabilities.json",
+            output_path="./data/sankey_diagram.png",
+            probability_threshold=0.05,  # Hide tokens with < 5% probability
+        )
+
+        print(f"Saved Sankey diagram png to {output_path}")
+
     elif args.generate:
         if args.omit:
             to_omit_list = parse_sequences(args.omit)
@@ -202,7 +244,7 @@ def main() -> None:
 
 
 def parse_sequences(seq_str):
-    """Parse multiple sequences separated by semicolon"""
+    """Parse multiple sequences separated by semicolon."""
     if not seq_str:
         return None
     return seq_str.split(";")

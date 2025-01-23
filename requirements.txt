@@ -8,7 +8,7 @@ loguru==0.7.3
     # via causal-experiment (./pyproject.toml)
 matplotlib==3.10.0
     # via causal-experiment (./pyproject.toml)
-numpy==2.2.2
+numpy<2.0.0
     # via causal-experiment (./pyproject.toml)
 pandas==2.2.3
     # via causal-experiment (./pyproject.toml)
@@ -18,11 +18,14 @@ scikit-learn==1.6.1
     # via causal-experiment (./pyproject.toml)
 seaborn==0.13.2
     # via causal-experiment (./pyproject.toml)
-streamlit==1.41.1
+torch
     # via causal-experiment (./pyproject.toml)
-torch==2.5.1+cu124
-    # via causal-experiment (./pyproject.toml)
-torchvision==0.20.1+cu124
+torchvision
     # via causal-experiment (./pyproject.toml)
 transformers==4.48.0
     # via causal-experiment (./pyproject.toml)
+asteval
+monsterui
+sse-starlette
+vllm>=0.6.5
+

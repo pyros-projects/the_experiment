@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Token Probability Sankey Diagram</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-sankey/0.12.3/d3-sankey.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        #container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .node rect {
+            cursor: pointer;
+            fill-opacity: .9;
+            shape-rendering: crispEdges;
+        }
+        .node text {
+            pointer-events: none;
+            font-size: 12px;
+        }
+        .link {
+            fill: none;
+            stroke: #000;
+            stroke-opacity: .2;
+        }
+        .link:hover {
+            stroke-opacity: .5;
+        }
+        #fileInput {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <input type="file" id="fileInput" accept=".json">
+    <div id="container"></div>
+
+    <script>
+        // Set up dimensions
+        const margin = {top: 10, right: 10, bottom: 10, left: 10};
+        const width = 1200 - margin.left - margin.right;
+        const height = 800 - margin.top - margin.bottom;
+
+        // Color scale for nodes based on probability
+        const color = d3.scaleSequential(d3.interpolateBlues)
+            .domain([0, 1]);
+
+        function formatData(rawData) {
+            // Create a map of original indices to node objects
+            const nodeMap = new Map(rawData.nodes.map((node, i) => [i, node]));
+            
+            // Format nodes
+            const nodes = rawData.nodes.map(node => ({
+                id: node.id || node.name,  // Use id if available, otherwise name
+                name: node.name,
+                probability: node.probability,
+                level: node.level || 0
+            }));
+
+            // Format links using node ids
+            const links = rawData.links.map(link => ({
+                source: nodes[link.source].id,
+                target: nodes[link.target].id,
+                value: link.value || nodeMap.get(link.target).probability
+            }));
+
+            return { nodes, links };
+        }
+
+        function createSankey(rawData) {
+            // Clear previous diagram
+            d3.select("#container").html("");
+
+            // Format the data
+            const data = formatData(rawData);
+
+            // Create SVG
+            const svg = d3.select("#container")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // Set up Sankey generator
+            const sankey = d3.sankey()
+                .nodeId(d => d.id)
+                .nodeWidth(15)
+                .nodePadding(20)
+                .extent([[0, 0], [width, height]]);
+
+            // Generate the Sankey layout
+            const { nodes, links } = sankey(data);
+
+            // Draw links
+            svg.append("g")
+                .selectAll("path")
+                .data(links)
+                .join("path")
+                .attr("class", "link")
+                .attr("d", d3.sankeyLinkHorizontal())
+                .attr("stroke-width", d => Math.max(1, d.width))
+                .style("stroke", "#aaa")
+                .style("opacity", 0.4);
+
+            // Draw nodes
+            const node = svg.append("g")
+                .selectAll("g")
+                .data(nodes)
+                .join("g")
+                .attr("class", "node")
+                .attr("transform", d => `translate(${d.x0},${d.y0})`);
+
+            // Add node rectangles
+            node.append("rect")
+                .attr("height", d => Math.max(1, d.y1 - d.y0))
+                .attr("width", d => d.x1 - d.x0)
+                .attr("fill", d => color(d.probability))
+                .append("title")
+                .text(d => `${d.name}\nProbability: ${(d.probability * 100).toFixed(2)}%`);
+
+            // Add node labels
+            node.append("text")
+                .attr("x", -6)
+                .attr("y", d => (d.y1 - d.y0) / 2)
+                .attr("dy", "0.35em")
+                .attr("text-anchor", "end")
+                .text(d => `${d.name} (${(d.probability * 100).toFixed(2)}%)`)
+                .filter(d => d.x0 < width / 2)
+                .attr("x", 6 + sankey.nodeWidth())
+                .attr("text-anchor", "start");
+        }
+
+        // File input handler
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = JSON.parse(e.target.result);
+                    createSankey(data);
+                };
+                reader.readAsText(file);
+            }
+        });
+    </script>
+</body>
+</html>

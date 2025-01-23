@@ -3,15 +3,12 @@ name = "the-experiment"
 version = "0.3.5"
 description = "Add your description here"
 readme = "README.md"
-authors = [
-    { name = "pyros-sd-models", email = "pyros.sd.models@gmail.com" }
-]
+authors = [{ name = "pyros-sd-models", email = "pyros.sd.models@gmail.com" }]
 requires-python = ">=3.12"
 dependencies = [
     "asteval>=1.0.6",
     "datasets>=3.2.0",
     "devtools>=0.12.2",
-    "fire>=0.7.0",
     "loguru>=0.7.3",
     "matplotlib>=3.10.0",
     "monsterui>=0.0.25",
@@ -19,7 +16,6 @@ dependencies = [
     "pandas>=2.2.3",
     "plotly>=5.24.1",
     "python-fasthtml>=0.12.0",
-    "pywebview>=5.3.2",
     "scikit-learn>=1.6.1",
     "seaborn>=0.13.2",
     "sse-starlette>=2.2.1",
@@ -31,6 +27,12 @@ dependencies = [
 [tool.uv.sources]
 torch = { index = "pytorch" }
 torchvision = { index = "pytorch" }
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
 
 # [tool.pyright]
 # include = ["."]
@@ -50,11 +52,6 @@ torchvision = { index = "pytorch" }
 # typeCheckingMode = "basic"
 
 
-[[tool.uv.index]]
-name = "pytorch"
-url = "https://download.pytorch.org/whl/cu124"
-explicit = true
-
 [project.scripts]
 the-experiment = "the_experiment:main"
 
@@ -71,4 +68,52 @@ dev = [
     "pytest-cov>=6.0.0",
     "pytest-sugar>=1.0.0",
     "ruff>=0.9.2",
+]
+
+
+[tool.ruff]
+cache-dir = ".cache/ruff"
+line-length = 120
+## formatting
+format.quote-style = "double"
+format.indent-style = "space"
+format.skip-magic-trailing-comma = false
+format.line-ending = "auto"
+format.docstring-code-format = true
+format.docstring-code-line-length = "dynamic"
+## linting
+lint.select = [
+    'D',   #pydocstyle
+    'E',
+    'W',   # pycodestyle
+    'F',   #pyflakes
+    'I',   # sort imports
+    'UP',  #pyupgrade
+    "RUF", # ruff dev's own rules
+    "SIM", # pyflakes simplicity
+    "C90", # more complexity rules
+]
+lint.ignore = [
+    "D103",
+    "D104",
+    "E203",
+    "E266",
+    "E501",
+    "F541",
+    "D417",
+    "F403",
+    "F405",
+    "F811",
+]
+lint.exclude = ["logs/", "data/", "tests/", "docs/", "dump/"]
+lint.pydocstyle.convention = "google"
+lint.isort.combine-as-imports = true
+exclude = [
+    "logs/",
+    "data/",
+    "tests/",
+    "docs/",
+    "src/templates/",
+    "dump/",
+    "src/frontend/",
 ]
