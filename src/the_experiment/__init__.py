@@ -16,6 +16,7 @@ from fasthtml.components import (
 )
 from monsterui.all import *
 
+from the_experiment.app.modules.analyzer_view import AnalyzerView
 from the_experiment.app.modules.dataset_view import DatasetView
 from the_experiment.app.modules.rules_editor_view import create_rule_editor
 from the_experiment.app.modules.rules_playground import RulesPlaygroundView
@@ -119,18 +120,9 @@ def get():
     return TrainView(rt)
 
 
-# @rt("/analyze")
-# def get():
-#     return (
-#         Sl_tab_group()(
-#             # Tab headers
-#             Sl_tab("Sankeynator", slot="nav", panel="sankey"),
-#             Sl_tab("Weight Watcher", slot="nav", panel="weight"),
-#             # Tab panels
-#             Sl_tab_panel(WeightView(rt), name="sankey"),
-#             Sl_tab_panel(WeightView(rt), name="weight"),
-#         ),
-#     )
+@rt("/analyze")
+def get():
+    return AnalyzerView(rt)
 
 
 @rt("/icon/{icon}")
